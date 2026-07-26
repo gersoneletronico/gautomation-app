@@ -31,6 +31,9 @@ export default async function AdminLayout({
           <Link href="/admin/orcamentos" className="px-3 py-2 rounded-md hover:bg-neutral-800 transition-colors">
             Orçamentos
           </Link>
+          <Link href="/admin/senha" className="px-3 py-2 rounded-md hover:bg-neutral-800 transition-colors">
+            Trocar senha
+          </Link>
           <Link href="/" className="px-3 py-2 rounded-md hover:bg-neutral-800 transition-colors text-neutral-400">
             ← Ver site
           </Link>

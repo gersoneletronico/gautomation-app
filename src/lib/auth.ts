@@ -57,3 +57,14 @@ export async function changePassword(username: string, newPassword: string) {
   const hash = bcrypt.hashSync(newPassword, 10);
   await sql`UPDATE admin_users SET password_hash = ${hash} WHERE username = ${username}`;
 }
+
+export async function changePasswordWithVerification(
+  username: string,
+  currentPassword: string,
+  newPassword: string
+) {
+  const verified = await verifyLogin(username, currentPassword);
+  if (!verified) return false;
+  await changePassword(username, newPassword);
+  return true;
+}
