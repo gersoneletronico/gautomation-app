@@ -282,7 +282,8 @@ export default function OrcamentoForm({ initial }: { initial?: OrcamentoData }) 
                     step="0.01"
                     className={inputClass}
                     value={it.quantidade}
-                    onChange={(e) => setItem(idx, "quantidade", Number(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setItem(idx, "quantidade", e.target.value === "" ? 0 : Number(e.target.value))}
                   />
                 </div>
                 <div>
@@ -296,7 +297,8 @@ export default function OrcamentoForm({ initial }: { initial?: OrcamentoData }) 
                     step="0.01"
                     className={inputClass}
                     value={it.valor_unitario}
-                    onChange={(e) => setItem(idx, "valor_unitario", Number(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setItem(idx, "valor_unitario", e.target.value === "" ? 0 : Number(e.target.value))}
                   />
                 </div>
                 <div>
@@ -331,7 +333,8 @@ export default function OrcamentoForm({ initial }: { initial?: OrcamentoData }) 
               step="0.01"
               className="bg-neutral-800 border border-neutral-700 rounded-md px-2 py-1 w-32 text-right outline-none focus:border-orange-500"
               value={data.desconto}
-              onChange={(e) => setField("desconto", Number(e.target.value))}
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setField("desconto", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </div>
           <div className="flex items-center gap-2 text-base font-semibold text-orange-400">

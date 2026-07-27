@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { requireAuth } from "@/lib/requireAuth";
-import { gerarNumeroOrcamento } from "@/lib/numero";
+import { gerarNumeroOrcamento, dataEmissaoBrasilia } from "@/lib/numero";
 
 export async function GET() {
   const unauthorized = await requireAuth();
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   const now = new Date();
   const numero = gerarNumeroOrcamento(now);
-  const dataEmissao = now.toISOString().slice(0, 10);
+  const dataEmissao = dataEmissaoBrasilia(now);
 
   const { rows } = await sql<{ id: number }>`
     INSERT INTO orcamentos

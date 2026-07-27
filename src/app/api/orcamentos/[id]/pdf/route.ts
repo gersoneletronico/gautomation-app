@@ -7,6 +7,9 @@ import { requireAuth } from "@/lib/requireAuth";
 import OrcamentoPdf, { OrcamentoPdfData } from "@/lib/pdf/OrcamentoPdf";
 import React from "react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -87,6 +90,7 @@ export async function GET(
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="orcamento-${data.numero}.pdf"`,
+      "Cache-Control": "no-store, max-age=0, must-revalidate",
     },
   });
 }
