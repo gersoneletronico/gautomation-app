@@ -20,8 +20,8 @@ const styles = StyleSheet.create({
   },
   logo: { width: 190, height: 124, objectFit: "contain" },
   companyBlock: { textAlign: "right" },
-  companyName: { fontSize: 12, fontWeight: 700, marginBottom: 2, color: AZUL_ESCURO },
-  small: { fontSize: 8, color: "#4a4a4a" },
+  companyName: { fontSize: 18, fontWeight: 700, marginBottom: 4, color: AZUL_ESCURO },
+  small: { fontSize: 9, color: "#4a4a4a", marginBottom: 1 },
 
   titleBar: {
     backgroundColor: AZUL,
