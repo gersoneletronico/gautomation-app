@@ -33,15 +33,24 @@ export async function GET(
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
-  } catch {
-    return NextResponse.json({ error: "Não foi possível consultar o CNPJ agora" }, { status: 502 });
+  } catch (err) {
+    console.error("[cnpj] fetch falhou:", err);
+    return NextResponse.json(
+      { error: "Não foi possível consultar o CNPJ agora", debug: String(err) },
+      { status: 502 }
+    );
   }
 
   if (res.status === 404) {
     return NextResponse.json({ error: "CNPJ não encontrado" }, { status: 404 });
   }
   if (!res.ok) {
-    return NextResponse.json({ error: "Não foi possível consultar o CNPJ agora" }, { status: 502 });
+    const bodyText = await res.text().catch(() => "");
+    console.error("[cnpj] resposta não-ok:", res.status, bodyText);
+    return NextResponse.json(
+      { error: "Não foi possível consultar o CNPJ agora", debug: `status ${res.status}: ${bodyText.slice(0, 300)}` },
+      { status: 502 }
+    );
   }
 
   const data: BrasilApiCnpj = await res.json();
