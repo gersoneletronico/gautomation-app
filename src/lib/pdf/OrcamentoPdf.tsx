@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     marginBottom: 0,
   },
-  logo: { width: 95, height: 62, objectFit: "contain" },
+  logo: { width: 150, height: 98, objectFit: "contain" },
   companyBlock: { textAlign: "right" },
   companyName: { fontSize: 12, fontWeight: 700, marginBottom: 2, color: AZUL_ESCURO },
   small: { fontSize: 8, color: "#4a4a4a" },
@@ -274,10 +274,6 @@ export default function OrcamentoPdf({ data }: { data: OrcamentoPdfData }) {
             </View>
             <View style={styles.sectionBody}>
               <View style={styles.row}>
-                <Text style={styles.label}>Prazo entrega:</Text>
-                <Text style={styles.value}>{data.prazo_entrega || "-"}</Text>
-              </View>
-              <View style={styles.row}>
                 <Text style={styles.label}>Validade proposta:</Text>
                 <Text style={styles.value}>{data.validade_proposta || "-"}</Text>
               </View>
@@ -286,15 +282,9 @@ export default function OrcamentoPdf({ data }: { data: OrcamentoPdfData }) {
                 <Text style={styles.value}>{data.condicoes_pagamento || "-"}</Text>
               </View>
               <View style={styles.row}>
-                <Text style={styles.label}>Garantia serviço:</Text>
+                <Text style={styles.label}>Garantia serviço/produto:</Text>
                 <Text style={styles.value}>{data.garantia_servico || "-"}</Text>
               </View>
-              {data.garantia_produto && (
-                <View style={styles.row}>
-                  <Text style={styles.label}>Garantia produto:</Text>
-                  <Text style={styles.value}>{data.garantia_produto}</Text>
-                </View>
-              )}
             </View>
           </View>
 

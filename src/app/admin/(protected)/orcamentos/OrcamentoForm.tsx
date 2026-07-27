@@ -219,10 +219,6 @@ export default function OrcamentoForm({ initial }: { initial?: OrcamentoData }) 
           <input className={inputClass} value={data.natureza} onChange={(e) => setField("natureza", e.target.value)} />
         </div>
         <div>
-          <label className={labelClass}>Prazo de entrega</label>
-          <input className={inputClass} value={data.prazo_entrega} onChange={(e) => setField("prazo_entrega", e.target.value)} />
-        </div>
-        <div>
           <label className={labelClass}>Validade da proposta</label>
           <input className={inputClass} value={data.validade_proposta} onChange={(e) => setField("validade_proposta", e.target.value)} />
         </div>
@@ -231,12 +227,8 @@ export default function OrcamentoForm({ initial }: { initial?: OrcamentoData }) 
           <input className={inputClass} value={data.condicoes_pagamento} onChange={(e) => setField("condicoes_pagamento", e.target.value)} />
         </div>
         <div>
-          <label className={labelClass}>Garantia de serviço</label>
+          <label className={labelClass}>Garantia de serviço ou produto</label>
           <input className={inputClass} value={data.garantia_servico} onChange={(e) => setField("garantia_servico", e.target.value)} />
-        </div>
-        <div>
-          <label className={labelClass}>Garantia de produto</label>
-          <input className={inputClass} value={data.garantia_produto} onChange={(e) => setField("garantia_produto", e.target.value)} />
         </div>
         {isEdit && (
           <div>
