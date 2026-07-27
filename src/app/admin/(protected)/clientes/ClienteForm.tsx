@@ -196,14 +196,6 @@ export default function ClienteForm({ initial }: { initial?: EmpresaData }) {
               onChange={(e) => setField("ie", e.target.value)}
             />
           </div>
-          <div>
-            <label className={labelClass}>Natureza (venda/serviço)</label>
-            <input
-              className={inputClass}
-              value={data.natureza}
-              onChange={(e) => setField("natureza", e.target.value)}
-            />
-          </div>
           <div className="sm:col-span-2">
             <label className={labelClass}>Endereço</label>
             <input
@@ -243,24 +235,6 @@ export default function ClienteForm({ initial }: { initial?: EmpresaData }) {
               className={inputClass}
               value={data.cep}
               onChange={(e) => setField("cep", e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Prazo padrão</label>
-            <input
-              className={inputClass}
-              placeholder="Ex: 7 DIAS"
-              value={data.prazo_padrao}
-              onChange={(e) => setField("prazo_padrao", e.target.value)}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={labelClass}>Observações</label>
-            <textarea
-              className={inputClass}
-              rows={2}
-              value={data.observacoes}
-              onChange={(e) => setField("observacoes", e.target.value)}
             />
           </div>
         </div>
