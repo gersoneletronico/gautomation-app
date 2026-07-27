@@ -1,18 +1,85 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/requireAuth";
 
-type BrasilApiCnpj = {
+type Resultado = {
   razao_social: string;
-  nome_fantasia: string | null;
-  logradouro: string | null;
-  numero: string | null;
-  bairro: string | null;
-  municipio: string | null;
-  uf: string | null;
-  cep: string | null;
-  ddd_telefone_1: string | null;
-  descricao_situacao_cadastral: string | null;
+  nome_fantasia: string;
+  endereco: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  cep: string;
+  telefone: string;
 };
+
+const BROWSER_HEADERS = {
+  Accept: "application/json",
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+};
+
+async function tentarBrasilApi(digits: string): Promise<Resultado | null> {
+  const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`, {
+    headers: BROWSER_HEADERS,
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const d = await res.json();
+  return {
+    razao_social: d.razao_social || "",
+    nome_fantasia: d.nome_fantasia || "",
+    endereco: [d.logradouro, d.numero].filter(Boolean).join(", "),
+    bairro: d.bairro || "",
+    cidade: d.municipio || "",
+    estado: d.uf || "",
+    cep: d.cep || "",
+    telefone: d.ddd_telefone_1 || "",
+  };
+}
+
+async function tentarReceitaWs(digits: string): Promise<Resultado | null> {
+  const res = await fetch(`https://receitaws.com.br/v1/cnpj/${digits}`, {
+    headers: BROWSER_HEADERS,
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const d = await res.json();
+  if (d.status === "ERROR") return null;
+  return {
+    razao_social: d.nome || "",
+    nome_fantasia: d.fantasia || "",
+    endereco: [d.logradouro, d.numero].filter(Boolean).join(", "),
+    bairro: d.bairro || "",
+    cidade: d.municipio || "",
+    estado: d.uf || "",
+    cep: d.cep || "",
+    telefone: d.telefone || "",
+  };
+}
+
+async function tentarCnpjWs(digits: string): Promise<Resultado | null> {
+  const res = await fetch(`https://publica.cnpj.ws/cnpj/${digits}`, {
+    headers: BROWSER_HEADERS,
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const d = await res.json();
+  const estabelecimento = d.estabelecimento || {};
+  return {
+    razao_social: d.razao_social || "",
+    nome_fantasia: estabelecimento.nome_fantasia || "",
+    endereco: [estabelecimento.tipo_logradouro, estabelecimento.logradouro, estabelecimento.numero]
+      .filter(Boolean)
+      .join(" "),
+    bairro: estabelecimento.bairro || "",
+    cidade: estabelecimento.cidade?.nome || "",
+    estado: estabelecimento.estado?.sigla || "",
+    cep: estabelecimento.cep || "",
+    telefone: estabelecimento.ddd1 && estabelecimento.telefone1
+      ? `(${estabelecimento.ddd1}) ${estabelecimento.telefone1}`
+      : "",
+  };
+}
 
 export async function GET(
   _req: NextRequest,
@@ -27,45 +94,21 @@ export async function GET(
     return NextResponse.json({ error: "CNPJ inválido" }, { status: 400 });
   }
 
-  let res: Response;
-  try {
-    res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`, {
-      headers: { Accept: "application/json" },
-      cache: "no-store",
-    });
-  } catch (err) {
-    console.error("[cnpj] fetch falhou:", err);
-    return NextResponse.json(
-      { error: "Não foi possível consultar o CNPJ agora", debug: String(err) },
-      { status: 502 }
-    );
+  const provedores = [tentarBrasilApi, tentarReceitaWs, tentarCnpjWs];
+
+  for (const provedor of provedores) {
+    try {
+      const resultado = await provedor(digits);
+      if (resultado && resultado.razao_social) {
+        return NextResponse.json(resultado);
+      }
+    } catch (err) {
+      console.error(`[cnpj] provedor falhou:`, err);
+    }
   }
 
-  if (res.status === 404) {
-    return NextResponse.json({ error: "CNPJ não encontrado" }, { status: 404 });
-  }
-  if (!res.ok) {
-    const bodyText = await res.text().catch(() => "");
-    console.error("[cnpj] resposta não-ok:", res.status, bodyText);
-    return NextResponse.json(
-      { error: "Não foi possível consultar o CNPJ agora", debug: `status ${res.status}: ${bodyText.slice(0, 300)}` },
-      { status: 502 }
-    );
-  }
-
-  const data: BrasilApiCnpj = await res.json();
-
-  const endereco = [data.logradouro, data.numero].filter(Boolean).join(", ");
-
-  return NextResponse.json({
-    razao_social: data.razao_social || "",
-    nome_fantasia: data.nome_fantasia || "",
-    endereco,
-    bairro: data.bairro || "",
-    cidade: data.municipio || "",
-    estado: data.uf || "",
-    cep: data.cep || "",
-    telefone: data.ddd_telefone_1 || "",
-    situacao: data.descricao_situacao_cadastral || "",
-  });
+  return NextResponse.json(
+    { error: "CNPJ não encontrado ou serviços de consulta indisponíveis no momento. Tente novamente em instantes." },
+    { status: 502 }
+  );
 }
