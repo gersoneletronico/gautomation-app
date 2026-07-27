@@ -51,7 +51,7 @@ export default async function AdminDashboard() {
 
       <div>
         <h2 className="text-lg font-semibold mb-3">Últimos orçamentos</h2>
-        <div className="border border-neutral-800 rounded-lg overflow-hidden">
+        <div className="border border-neutral-800 rounded-lg overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-neutral-900 text-neutral-400">
               <tr>

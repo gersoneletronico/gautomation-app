@@ -13,8 +13,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-neutral-950 text-neutral-100">
       <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 relative z-10 bg-neutral-950/90 backdrop-blur">
         <div className="flex items-center gap-3">
-          <Image src="/logo.png" alt="G Automation" width={48} height={32} className="h-10 w-auto" />
-          <span className="font-semibold tracking-wide text-lg">G AUTOMATION</span>
+          <Image src="/logo.png" alt="G Automation" width={140} height={94} className="h-16 sm:h-20 w-auto" />
         </div>
         <Link
           href="/admin"

@@ -31,7 +31,7 @@ export default async function ClientesPage() {
         </Link>
       </div>
 
-      <div className="border border-neutral-800 rounded-lg overflow-hidden">
+      <div className="border border-neutral-800 rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-neutral-900 text-neutral-400">
             <tr>
