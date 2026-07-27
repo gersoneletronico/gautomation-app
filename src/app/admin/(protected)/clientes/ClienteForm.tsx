@@ -49,10 +49,43 @@ export default function ClienteForm({ initial }: { initial?: EmpresaData }) {
   const [data, setData] = useState<EmpresaData>(initial ?? empty);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+  const [cnpjMsg, setCnpjMsg] = useState("");
   const isEdit = Boolean(initial?.id);
 
   function setField<K extends keyof EmpresaData>(key: K, value: EmpresaData[K]) {
     setData((d) => ({ ...d, [key]: value }));
+  }
+
+  async function buscarCnpj() {
+    const digits = data.cnpj.replace(/\D/g, "");
+    if (digits.length !== 14) {
+      setCnpjMsg("CNPJ incompleto (precisa ter 14 dígitos).");
+      return;
+    }
+    setBuscandoCnpj(true);
+    setCnpjMsg("Buscando dados...");
+    try {
+      const res = await fetch(`/api/cnpj/${digits}`);
+      const json = await res.json();
+      if (!res.ok) {
+        setCnpjMsg(json.error || "Não foi possível buscar o CNPJ.");
+        return;
+      }
+      setData((d) => ({
+        ...d,
+        razao_social: d.razao_social.trim() ? d.razao_social : json.razao_social || d.razao_social,
+        nome_fantasia: d.nome_fantasia.trim() ? d.nome_fantasia : json.nome_fantasia || d.nome_fantasia,
+        endereco: json.endereco || d.endereco,
+        bairro: json.bairro || d.bairro,
+        cidade: json.cidade || d.cidade,
+        estado: json.estado || d.estado,
+        cep: json.cep || d.cep,
+      }));
+      setCnpjMsg("Dados preenchidos automaticamente.");
+    } finally {
+      setBuscandoCnpj(false);
+    }
   }
 
   function setContato(idx: number, field: keyof Contato, value: string) {
@@ -136,11 +169,24 @@ export default function ClienteForm({ initial }: { initial?: EmpresaData }) {
           </div>
           <div>
             <label className={labelClass}>CNPJ</label>
-            <input
-              className={inputClass}
-              value={data.cnpj}
-              onChange={(e) => setField("cnpj", e.target.value)}
-            />
+            <div className="flex gap-2">
+              <input
+                className={inputClass}
+                value={data.cnpj}
+                onChange={(e) => setField("cnpj", e.target.value)}
+                onBlur={buscarCnpj}
+                placeholder="Somente números ou com pontuação"
+              />
+              <button
+                type="button"
+                onClick={buscarCnpj}
+                disabled={buscandoCnpj}
+                className="shrink-0 text-xs px-3 py-2 rounded-md bg-neutral-800 hover:bg-neutral-700 transition-colors disabled:opacity-60"
+              >
+                {buscandoCnpj ? "Buscando..." : "Buscar"}
+              </button>
+            </div>
+            {cnpjMsg && <p className="text-xs text-neutral-500 mt-1">{cnpjMsg}</p>}
           </div>
           <div>
             <label className={labelClass}>Inscrição Estadual</label>
