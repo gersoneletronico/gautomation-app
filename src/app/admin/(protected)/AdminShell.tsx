@@ -52,8 +52,7 @@ export default function AdminShell({
       {/* Barra superior mobile */}
       <header className="sm:hidden flex items-center justify-between px-4 py-3 border-b border-neutral-800 sticky top-0 z-30 bg-neutral-950">
         <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="G Automation" width={28} height={19} className="h-6 w-auto" />
-          <span className="font-semibold text-sm">G AUTOMATION</span>
+          <Image src="/logo.png" alt="G Automation" width={70} height={47} className="h-12 w-auto" />
         </div>
         <button
           onClick={() => setOpen((v) => !v)}
@@ -86,9 +85,8 @@ export default function AdminShell({
 
       {/* Sidebar desktop */}
       <aside className="hidden sm:flex w-60 shrink-0 border-r border-neutral-800 flex-col">
-        <div className="flex items-center gap-2 px-5 py-4 border-b border-neutral-800">
-          <Image src="/logo.png" alt="G Automation" width={32} height={22} className="h-7 w-auto" />
-          <span className="font-semibold text-sm">G AUTOMATION</span>
+        <div className="flex items-center justify-center px-5 py-4 border-b border-neutral-800">
+          <Image src="/logo.png" alt="G Automation" width={110} height={73} className="h-16 w-auto" />
         </div>
         <nav className="flex-1 flex flex-col gap-1 p-3 text-sm">{NavLinks}</nav>
         <div className="p-3 border-t border-neutral-800 flex items-center justify-between">
