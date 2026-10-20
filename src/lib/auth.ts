@@ -30,7 +30,8 @@ export async function createSession(username: string) {
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Acesso por HTTP na rede local: cookie "secure" seria descartado pelo navegador.
+    secure: process.env.COOKIE_SECURE === "true",
     path: "/",
     maxAge: 60 * 60 * 8,
   });
