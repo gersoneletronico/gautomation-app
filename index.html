@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estudo de Instrumentação</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f2a44; --navy2:#173a5e; --cyan:#0aa5c2; --cyan-soft:#e3f6fa;
+  --green:#1f9d61; --green-soft:#e4f5ec; --red:#d2453a; --red-soft:#fbe9e7;
+  --orange:#e08a1e; --orange-soft:#fdf1e1;
+  --bg:#f3f5f8; --card:#fff; --ink:#14212e; --muted:#5c6b7a; --line:#dde3ea;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:16px;line-height:1.45}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:3px solid var(--navy);box-shadow:0 2px 8px rgba(15,42,68,.08)}
+header .brand{max-width:760px;margin:0 auto;padding:10px 14px 8px;display:flex;align-items:center;gap:12px}
+header .brand img{height:52px;width:auto;display:block}
+header .brand .txt{border-left:1px solid var(--line);padding-left:12px;min-width:0}
+header h1{margin:0;font-size:.98rem;font-weight:600;color:var(--navy);line-height:1.2}
+header .sub{font-size:.74rem;color:var(--muted);margin-top:2px}
+@media (max-width:420px){header .brand{flex-direction:column;align-items:flex-start;gap:4px}header .brand img{height:62px}header .brand .txt{border-left:0;padding-left:0}}
+main{max-width:760px;margin:0 auto;padding:16px 14px 96px}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;border:0;background:none;padding:9px 2px 10px;font:inherit;font-size:.72rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+nav.tabs button.on{color:var(--cyan);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+h2{font-size:1.15rem;margin:4px 0 12px}
+h3{font-size:.95rem;margin:0 0 8px}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:.82rem;cursor:pointer;color:var(--ink)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn{border:0;border-radius:10px;padding:12px 16px;font:inherit;font-weight:600;cursor:pointer;background:var(--cyan);color:#fff}
+.btn.sec{background:#fff;color:var(--navy);border:1px solid var(--line)}
+.btn.block{width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{flex:1}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--bg);border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:1.35rem;font-family:'IBM Plex Mono',monospace}
+.stat span{font-size:.74rem;color:var(--muted)}
+.bar{height:7px;background:var(--line);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--cyan)}
+.topic-row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.topic-row:last-child{border-bottom:0}
+.topic-row .bar{grid-column:1/-1}
+/* quiz */
+.qmeta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:8px}
+.tag{display:inline-block;background:var(--cyan-soft);color:#076f84;border-radius:6px;padding:2px 7px;font-size:.74rem;font-weight:600}
+.qtext{font-size:1.02rem;font-weight:500;margin:6px 0 14px}
+.opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:12px 13px;margin-bottom:8px;font:inherit;cursor:pointer;color:var(--ink)}
+.opt:disabled{cursor:default}
+.opt.ok{border-color:var(--green);background:var(--green-soft)}
+.opt.bad{border-color:var(--red);background:var(--red-soft)}
+.numwrap{display:flex;gap:8px;align-items:center}
+.numwrap input{flex:1;min-width:0}
+input,select{font:inherit;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;width:100%;color:var(--ink)}
+input:focus,select:focus{outline:none;border-color:var(--cyan)}
+.unit{font-family:'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
+.fb{border-radius:11px;padding:12px 13px;margin-top:12px;font-size:.92rem}
+.fb.ok{background:var(--green-soft);border-left:4px solid var(--green)}
+.fb.bad{background:var(--red-soft);border-left:4px solid var(--red)}
+.fb b{display:block;margin-bottom:3px}
+.progress-q{height:4px;background:var(--line);border-radius:4px;margin-bottom:12px;overflow:hidden}
+.progress-q i{display:block;height:100%;background:var(--cyan);transition:width .2s}
+/* flashcards */
+.flash{perspective:1000px;margin-bottom:12px;cursor:pointer;user-select:none}
+.flash-inner{position:relative;min-height:230px;transition:transform .45s;transform-style:preserve-3d}
+.flash.flip .flash-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r);padding:22px 18px;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--line)}
+.face.front{background:var(--navy);color:#fff;text-align:center}
+.face.front .term{font-size:1.4rem;font-weight:600}
+.face.front .hint{font-size:.75rem;color:#9fc3d9;margin-top:12px}
+.face.back{background:#fff;transform:rotateY(180deg)}
+.face.back .def{font-size:.98rem}
+.face.back .key{margin-top:10px;font-size:.84rem;background:var(--orange-soft);border-radius:8px;padding:8px 10px}
+/* formulas */
+.f{border-left:4px solid var(--cyan);padding:2px 0 2px 12px;margin:12px 0}
+.f .eq{font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:600;color:var(--navy);margin:3px 0}
+.f .ex{font-size:.84rem;color:var(--muted)}
+.ruler{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;font-family:'IBM Plex Mono',monospace;font-size:.85rem;margin-top:6px}
+.ruler div{padding:8px 2px;border-right:1px solid var(--line)}
+.ruler div:last-child{border-right:0}
+.ruler b{display:block;color:var(--navy)}
+.warn{background:var(--orange-soft);border-radius:10px;padding:10px 12px;font-size:.85rem;margin-top:8px}
+/* calc */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label.lbl{font-size:.78rem;color:var(--muted);display:block;margin-bottom:4px}
+.out{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.out .stat b{font-size:1.1rem}
+.steps{font-family:'IBM Plex Mono',monospace;font-size:.82rem;background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:10px;white-space:pre-wrap}
+.gauge{margin-top:12px}
+.gauge .track{position:relative;height:12px;background:linear-gradient(90deg,#d8eef3,#0aa5c2);border-radius:8px}
+.gauge .pin{position:absolute;top:-5px;width:4px;height:22px;background:var(--navy);border-radius:2px;transform:translateX(-2px)}
+.gauge .lbls{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:4px;font-family:'IBM Plex Mono',monospace}
+.tb{width:100%;border-collapse:collapse;font-size:.82rem}
+.tb th{text-align:left;color:var(--muted);font-weight:600;font-size:.74rem;padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tb td{padding:6px 6px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.tb tr:last-child td{border-bottom:0}
+input.mini{padding:6px 8px;width:76px;font-size:.85rem}
+#tp-tab,#rz-tab,#tq-tab,#pr-tab,#vz-tab,#ms-tab{overflow-x:auto}
+optgroup{font-weight:700;color:var(--navy)}
+.hidden{display:none !important}
+
+.center{text-align:center}
+.big{font-size:2.2rem;font-weight:700;font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img src="logo.png" alt="G Automation — special industrial automations">
+    <div class="txt">
+      <h1>Estudo de Instrumentação Industrial</h1>
+      <div class="sub">Exercícios · Calibração · P&amp;ID e TAGs</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- INÍCIO -->
+  <section id="v-inicio">
+    <div class="card">
+      <h2 style="margin-top:0">Seu progresso</h2>
+      <div class="stat-grid">
+        <div class="stat"><b id="s-feitas">0</b><span>questões feitas</span></div>
+        <div class="stat"><b id="s-acerto">–</b><span>de acerto</span></div>
+        <div class="stat"><b id="s-erros">0</b><span>para revisar</span></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" onclick="go('treinar')">Treinar agora</button>
+        <button class="btn sec" id="btn-rev-home" onclick="startQuiz('erros')">Revisar erros</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Materiais em PDF</h3>
+      <div class="small muted" style="margin-bottom:8px">Abrem no Google Drive (precisa de internet).</div>
+      <div id="pdf-list"></div>
+    </div>
+    <div class="card">
+      <h3>Desempenho por tema</h3>
+      <div id="topic-list"></div>
+    </div>
+    <div class="card small muted">
+      <b style="color:var(--ink)">Regra de ouro do material:</b> tente resolver antes de olhar a resposta. Errar e entender o raciocínio vale mais do que acertar no chute.
+      <div style="margin-top:8px">Conteúdo baseado em: <i>100 Exercícios e Cálculos de Instrumentação Industrial</i>, <i>Guia Visual de Calibração e Testes de Instrumentos</i> e <i>Manual Visual de P&amp;ID, TAGs e Diagramas de Malha</i>. Material educacional; atividades reais seguem procedimentos, normas e documentação oficial.</div>
+      <button class="chip" style="margin-top:10px" onclick="resetAll()">Zerar progresso</button>
+    </div>
+  </section>
+
+  <!-- TREINAR -->
+  <section id="v-treinar" class="hidden">
+    <div id="quiz-setup">
+      <div class="card">
+        <h2 style="margin-top:0">Treinar</h2>
+        <div class="small muted">Escolha os temas</div>
+        <div class="chips" id="topic-chips"></div>
+        <div class="small muted">Modo</div>
+        <div class="chips" id="mode-chips"></div>
+        <button class="btn block" onclick="startQuiz()">Começar (<span id="pool-n">0</span> questões)</button>
+      </div>
+    </div>
+    <div id="quiz-run" class="hidden">
+      <div class="progress-q"><i id="qprog"></i></div>
+      <div class="card" id="qcard"></div>
+      <div class="row">
+        <button class="btn sec" onclick="endQuiz()">Sair</button>
+        <button class="btn hidden" id="btn-next" onclick="nextQ()">Próxima →</button>
+      </div>
+    </div>
+    <div id="quiz-end" class="hidden">
+      <div class="card center">
+        <div class="muted small">Resultado da rodada</div>
+        <div class="big" id="end-score"></div>
+        <div id="end-msg" class="muted" style="margin:6px 0 14px"></div>
+        <div class="row">
+          <button class="btn sec" onclick="endQuiz()">Voltar</button>
+          <button class="btn" id="btn-redo-err" onclick="startQuiz('rodada')">Refazer os que errei</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARTÕES -->
+  <section id="v-cartoes" class="hidden">
+    <div class="chips" id="deck-chips"></div>
+    <div class="flash" id="flash" onclick="flip()">
+      <div class="flash-inner">
+        <div class="face front"><div class="term" id="fc-term"></div><div class="hint">toque para virar</div></div>
+        <div class="face back"><div class="def" id="fc-def"></div><div class="key" id="fc-key"></div></div>
+      </div>
+    </div>
+    <div class="qmeta"><span id="fc-pos"></span><span id="fc-deck"></span></div>
+    <div class="row">
+      <button class="btn sec" onclick="moveCard(-1)">← Anterior</button>
+      <button class="btn sec" onclick="shuffleDeck()">Embaralhar</button>
+      <button class="btn" onclick="moveCard(1)">Próximo →</button>
+    </div>
+  </section>
+
+  <!-- FÓRMULAS -->
+  <section id="v-formulas" class="hidden">
+    <div class="card">
+      <h2 style="margin-top:0">As 5 relações principais</h2>
+      <div class="small muted">Antes de calcular: identifique LRV, URV, SPAN e o que a questão pede.</div>
+      <div class="f"><h3>1. Span</h3><div class="eq">SPAN = URV − LRV</div><div class="ex">20–120 °C → 120 − 20 = 100 °C</div></div>
+      <div class="f"><h3>2. Percentual da faixa</h3><div class="eq">% = (VALOR − LRV) / SPAN × 100</div><div class="ex">20–120 °C, 70 °C → 50/100 = 50%</div></div>
+      <div class="f"><h3>3. % → mA</h3><div class="eq">mA = 4 + 16 × (% / 100)</div><div class="ex">75% → 4 + 16 × 0,75 = 16 mA</div></div>
+      <div class="f"><h3>4. mA → %</h3><div class="eq">% = (mA − 4) / 16 × 100</div><div class="ex">12 mA → 8/16 = 50%</div></div>
+      <div class="f"><h3>5. Sinal → variável</h3><div class="eq">VALOR = LRV + SPAN × (% / 100)</div><div class="ex">0–10 bar, 12 mA → 50% → 5 bar</div></div>
+      <div class="f"><h3>Fórmula integrada (variável → mA)</h3><div class="eq">mA = 4 + 16 × (VALOR − LRV)/(URV − LRV)</div></div>
+    </div>
+    <div class="card">
+      <h3>Régua 4-20 mA</h3>
+      <div class="ruler">
+        <div><b>4</b>0%</div><div><b>8</b>25%</div><div><b>12</b>50%</div><div><b>16</b>75%</div><div><b>20</b>100%</div>
+      </div>
+      <div class="small muted" style="margin-top:8px">+4 mA a cada 25%. Span elétrico = 16 mA. 4 mA = "zero vivo" = LRV (não necessariamente 0 da variável).</div>
+    </div>
+    <div class="card">
+      <h3>Pressão</h3>
+      <div class="f"><div class="eq">ΔP = P1 − P2 (HIGH − LOW)</div></div>
+      <div class="f"><div class="eq">Pabs = Pg + Patm</div><div class="ex">Exemplo didático com Patm ≈ 1 bar</div></div>
+    </div>
+    <div class="card">
+      <h3>Calibração e erro</h3>
+      <div class="f"><div class="eq">ERRO = INDICAÇÃO − REFERÊNCIA</div><div class="ex">5,12 − 5,00 = +0,12 bar (acima → positivo)</div></div>
+      <div class="f"><div class="eq">Erro relativo = ERRO / REFERÊNCIA</div><div class="ex">Erro % = relativo × 100</div></div>
+      <div class="f"><div class="eq">% do SPAN = ERRO / SPAN × 100</div><div class="ex">0–10 bar, +0,10 bar → 1% do span</div></div>
+      <div class="warn">Antes de dizer "erro de 1%", pergunte: 1% de quê? Da leitura, do span ou do span elétrico?</div>
+    </div>
+    <div class="card">
+      <h3>Controle</h3>
+      <div class="f"><div class="eq">ERRO = SP − PV</div><div class="ex">Convenção usada nos exercícios. SP 60%, PV 52% → +8 p.p.</div></div>
+      <div class="f"><div class="eq">DESVIO = POSIÇÃO DESEJADA − POSIÇÃO REAL</div><div class="ex">Posicionador: 60% − 54% = +6 p.p.</div></div>
+    </div>
+    <div class="card">
+      <h3>5 erros para evitar</h3>
+      <ol class="small" style="margin:0;padding-left:20px">
+        <li>Confundir URV com SPAN.</li>
+        <li>Esquecer de subtrair (ou somar) o LRV.</li>
+        <li>Tratar mA como percentual direto (14,4 mA ≠ 72%).</li>
+        <li>Confundir transmissor com controlador.</li>
+        <li>Confundir posição da válvula com vazão real.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- CALCULADORA -->
+  <section id="v-calc" class="hidden">
+    <div class="card" style="padding:12px 14px">
+      <label class="lbl">Escolha o cálculo</label>
+      <select id="calc-sel" style="font-weight:600">
+        <optgroup label="Sinal">
+          <option value="escala">Escala 4-20 mA (valor ↔ % ↔ mA)</option>
+          <option value="cal">Calibração / ajuste em 5 pontos</option>
+        </optgroup>
+        <optgroup label="Nível">
+          <option value="nivel">Nível por pressão (aberto, perna úmida, selos)</option>
+          <option value="tanque">Volume e massa no tanque</option>
+        </optgroup>
+        <optgroup label="Vazão">
+          <option value="orif">Placa de orifício (ISO 5167)</option>
+          <option value="raiz">Vazão por ΔP — raiz quadrada</option>
+          <option value="vaz">Conversões de vazão, velocidade, Nm³/h</option>
+        </optgroup>
+        <optgroup label="Temperatura">
+          <option value="temp">Pt100 / Pt1000 (Ω ↔ °C)</option>
+        </optgroup>
+        <optgroup label="Pressão">
+          <option value="pres">Conversão, absoluta/manométrica, coluna</option>
+        </optgroup>
+        <optgroup label="Peso e massa">
+          <option value="peso">Célula de carga (mV/V, kg, mA)</option>
+          <option value="massa">Conversão de massa e força</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- 4-20 mA -->
+    <div class="cpanel" id="p-escala">
+    <div class="card">
+      <h2 style="margin-top:0">Escala 4-20 mA</h2>
+      <div class="grid2">
+        <div><label class="lbl">LRV</label><input id="c-lrv" inputmode="decimal" value="0"></div>
+        <div><label class="lbl">URV</label><input id="c-urv" inputmode="decimal" value="10"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label class="lbl">Unidade</label><input id="c-un" value="bar"></div>
+        <div><label class="lbl">Eu tenho</label>
+          <select id="c-mode"><option value="v">o valor</option><option value="p">o %</option><option value="m" selected>o sinal (mA)</option></select></div>
+      </div>
+      <div style="margin-top:10px"><label class="lbl" id="c-in-lbl">Sinal (mA)</label><input id="c-in" inputmode="decimal" value="12"></div>
+      <div class="out">
+        <div class="stat"><b id="o-v">–</b><span>valor</span></div>
+        <div class="stat"><b id="o-p">–</b><span>% da faixa</span></div>
+        <div class="stat"><b id="o-m">–</b><span>mA</span></div>
+      </div>
+      <div class="gauge"><div class="track"><div class="pin" id="o-pin"></div></div><div class="lbls"><span id="g-l">0</span><span>4 mA · 0%</span><span>20 mA · 100%</span><span id="g-u">10</span></div></div>
+      <div class="steps" id="o-steps"></div>
+      <div class="warn hidden" id="o-warn"></div>
+    </div>
+    </div>
+
+    <!-- PLACA DE ORIFÍCIO -->
+    <div class="cpanel hidden" id="p-orif">
+    <div class="card">
+      <h2 style="margin-top:0">Placa de orifício (ISO 5167-2)</h2>
+      <div class="small muted">Placa concêntrica de canto vivo. Coeficiente C por Reader-Harris/Gallagher, com iteração em Reynolds.</div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label class="lbl">Calcular</label><select id="or-mode"><option value="dp">ΔP (tenho a vazão)</option><option value="q">Vazão (tenho o ΔP)</option><option value="d">Orifício d (tenho vazão e ΔP)</option></select></div>
+        <div><label class="lbl">Fluido</label><select id="or-fl"><option value="g">Gás / vapor</option><option value="l">Líquido</option></select></div>
+        <div><label class="lbl">Tomadas</label><select id="or-tap"><option value="flange">Flange (1")</option><option value="canto">Canto (corner)</option><option value="dd2">D e D/2</option></select></div>
+        <div><label class="lbl">Correção térmica de D e d</label><select id="or-mat"><option value="0">Sem correção (já corrigidos)</option><option value="11.5e-6">Aço carbono (11,5×10⁻⁶/°C)</option><option value="16.5e-6">Inox 304/316 (16,5×10⁻⁶/°C)</option></select></div>
+        <div><label class="lbl">D interno do tubo (mm)</label><input id="or-D" inputmode="decimal" value="254,50"></div>
+        <div id="or-d-wrap"><label class="lbl">d do orifício (mm)</label><input id="or-d" inputmode="decimal" value="161,20"></div>
+        <div id="or-T-wrap"><label class="lbl">Temperatura do fluido (°C)</label><input id="or-T" inputmode="decimal" value="320"></div>
+        <div><label class="lbl">Massa específica ρ (kg/m³)</label><input id="or-rho" inputmode="decimal" value="8,28"></div>
+        <div><label class="lbl">Viscosidade μ (cP)</label><input id="or-mu" inputmode="decimal" value="0,021"></div>
+        <div class="g-only"><label class="lbl">Expoente isentrópico κ</label><input id="or-k" inputmode="decimal" value="1,3"></div>
+      </div>
+      <div class="g-only" style="margin-top:10px"><label class="lbl">Pressão a montante p1</label>
+        <div class="numwrap"><input id="or-p1" inputmode="decimal" value="21"><select id="or-p1u" style="width:auto"></select><select id="or-p1t" style="width:auto"><option value="g">man. (g)</option><option value="a">abs. (a)</option></select></div></div>
+      <div id="or-q-wrap" style="margin-top:10px"><label class="lbl">Vazão</label>
+        <div class="numwrap"><input id="or-q" inputmode="decimal" value="60"><select id="or-qu" style="width:auto"></select></div></div>
+      <div id="or-dp-wrap" class="hidden" style="margin-top:10px"><label class="lbl">ΔP</label>
+        <div class="numwrap"><input id="or-dp" inputmode="decimal" value="9565"><select id="or-dpu" style="width:auto"></select></div></div>
+      <details style="margin-top:10px"><summary class="small" style="cursor:pointer;color:var(--navy);font-weight:600">Estimar ρ de gás (gás real: P·M / Z·R·T)</summary>
+        <div class="grid2" style="margin-top:8px">
+          <div><label class="lbl">Massa molar M (g/mol)</label><input id="or-M" inputmode="decimal" value="18,015"></div>
+          <div><label class="lbl">Fator de compressibilidade Z</label><input id="or-Z" inputmode="decimal" value="0,953"></div>
+        </div>
+        <div class="small muted" style="margin-top:6px">Usa p1 e a temperatura acima. Vapor d'água: M = 18,015. Para vapor, prefira ρ da tabela de vapor (IAPWS-IF97). Ex.: 21 kgf/cm²g e 320 °C ≈ 8,28 kg/m³.</div>
+        <button class="btn sec" style="margin-top:8px" id="or-estrho">Estimar e usar ρ</button>
+      </details>
+      <div class="out" id="or-out"></div>
+      <div class="steps" id="or-steps"></div>
+      <div class="warn hidden" id="or-warn"></div>
+    </div>
+    </div>
+
+    <!-- VAZÃO POR ΔP -->
+    <div class="cpanel hidden" id="p-raiz">
+    <div class="card">
+      <h2 style="margin-top:0">Vazão por ΔP — raiz quadrada</h2>
+      <div class="small muted">Q = Qmáx × √(ΔP / ΔPmáx). Vale para placa de orifício, Venturi, bocal e Annubar.</div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label class="lbl">ΔP máximo (URV do transmissor)</label><input id="rz-dpmax" inputmode="decimal" value="10000"></div>
+        <div><label class="lbl">Unidade de ΔP</label><select id="rz-dpu"></select></div>
+        <div><label class="lbl">Vazão máxima (100%)</label><input id="rz-qmax" inputmode="decimal" value="60"></div>
+        <div><label class="lbl">Unidade de vazão</label><input id="rz-qu" value="t/h"></div>
+        <div><label class="lbl">Saída do transmissor</label><select id="rz-out"><option value="lin">Linear em ΔP (raiz no CLP/DCS)</option><option value="sqrt">Com extração de raiz no transmissor</option></select></div>
+        <div><label class="lbl">Eu tenho</label><select id="rz-in"><option value="ma">o sinal (mA)</option><option value="dp">o ΔP</option><option value="q">a vazão</option></select></div>
+      </div>
+      <div style="margin-top:10px"><label class="lbl" id="rz-lbl">Sinal (mA)</label><input id="rz-x" inputmode="decimal" value="12"></div>
+      <div class="out" id="rz-res"></div>
+      <div class="steps" id="rz-steps"></div>
+      <h3 style="margin-top:14px">Tabela de pontos</h3>
+      <div id="rz-tab"></div>
+      <details style="margin-top:12px"><summary class="small" style="cursor:pointer;color:var(--navy);font-weight:600">Correção de densidade (fluido fora do projeto)</summary>
+        <div class="grid2" style="margin-top:8px">
+          <div><label class="lbl">ρ de projeto (kg/m³)</label><input id="rz-rp" inputmode="decimal" value="8,28"></div>
+          <div><label class="lbl">ρ real (kg/m³)</label><input id="rz-rr" inputmode="decimal" value="7,88"></div>
+          <div><label class="lbl">Tipo de vazão</label><select id="rz-qt"><option value="m">Mássica (kg/h, t/h)</option><option value="v">Volumétrica (m³/h)</option></select></div>
+          <div><label class="lbl">Vazão indicada</label><input id="rz-qi" inputmode="decimal" value="60"></div>
+        </div>
+        <div class="steps" id="rz-corr"></div>
+      </details>
+      <div class="warn">Abaixo de ~10% da vazão (1% do ΔP), a raiz amplifica ruído e erro de zero. É comum configurar um corte de baixa vazão (low flow cutoff).</div>
+    </div>
+    </div>
+
+    <!-- NÍVEL -->
+    <div class="cpanel hidden" id="p-nivel">
+    <div class="card">
+      <h2 style="margin-top:0">Nível por pressão hidrostática</h2>
+      <div class="small muted">P = ρ·g·h. Calcula LRV/URV do transmissor de pressão ou ΔP, com a cota do transmissor, a perna úmida ou os selos remotos.</div>
+      <div style="margin-top:10px"><label class="lbl">Montagem</label>
+        <select id="nv-tipo"><option value="aberto">Tanque aberto, ou fechado com perna seca</option><option value="umida">Tanque fechado com perna úmida (lado L)</option><option value="selos">Selos remotos com capilar nos dois lados</option></select></div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label class="lbl">ρ do processo (kg/m³)</label><input id="nv-rp" inputmode="decimal" value="1000"></div>
+        <div><label class="lbl">Unidade de saída</label><select id="nv-u"></select></div>
+        <div><label class="lbl">Nível mínimo (mm, acima da tomada inferior)</label><input id="nv-lmin" inputmode="decimal" value="0"></div>
+        <div><label class="lbl">Nível máximo (mm, acima da tomada inferior)</label><input id="nv-lmax" inputmode="decimal" value="3000"></div>
+        <div id="nv-h0w"><label class="lbl">Transmissor abaixo da tomada inferior (mm)</label><input id="nv-h0" inputmode="decimal" value="500"></div>
+        <div id="nv-htw"><label class="lbl">Distância entre tomadas (mm)</label><input id="nv-ht" inputmode="decimal" value="3500"></div>
+        <div id="nv-rsw"><label class="lbl" id="nv-rsl">ρ do fluido de selagem (kg/m³)</label><input id="nv-rs" inputmode="decimal" value="1000"></div>
+        <div><label class="lbl">Nível atual (mm), opcional</label><input id="nv-l" inputmode="decimal" value="1500"></div>
+      </div>
+      <div class="small muted" style="margin-top:6px">Se o transmissor estiver acima da tomada inferior, use valor negativo.</div>
+      <div class="out" id="nv-res"></div>
+      <div class="steps" id="nv-steps"></div>
+      <div class="warn" id="nv-note"></div>
+    </div>
+    </div>
+
+    <!-- PRESSÃO -->
+    <div class="cpanel hidden" id="p-pres">
+    <div class="card">
+      <h2 style="margin-top:0">Conversão de pressão</h2>
+      <div class="numwrap"><input id="pr-v" inputmode="decimal" value="21"><select id="pr-u" style="width:auto"></select></div>
+      <div id="pr-tab" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h3>Absoluta × manométrica</h3>
+      <div class="grid2">
+        <div><label class="lbl">Valor</label><input id="pa-v" inputmode="decimal" value="21"></div>
+        <div><label class="lbl">Unidade</label><select id="pa-u"></select></div>
+        <div><label class="lbl">O valor é</label><select id="pa-t"><option value="g">manométrico (g)</option><option value="a">absoluto (a)</option></select></div>
+        <div><label class="lbl">Pressão atmosférica (bar abs)</label><input id="pa-atm" inputmode="decimal" value="1,01325"></div>
+      </div>
+      <div class="steps" id="pa-out"></div>
+      <div class="small muted" style="margin-top:6px">A pressão atmosférica cai com a altitude (~1,2% a cada 100 m). Ao nível do mar: 1,01325 bar.</div>
+    </div>
+    <div class="card">
+      <h3>Coluna de líquido e correção de cota do transmissor</h3>
+      <div class="grid2">
+        <div><label class="lbl">ρ do líquido na tomada (kg/m³)</label><input id="ph-r" inputmode="decimal" value="1000"></div>
+        <div><label class="lbl">Desnível (m) — transmissor abaixo da tomada</label><input id="ph-h" inputmode="decimal" value="3"></div>
+        <div><label class="lbl">Unidade</label><select id="ph-u"></select></div>
+      </div>
+      <div class="steps" id="ph-out"></div>
+      <div class="small muted" style="margin-top:6px">Com a linha de impulso cheia de líquido e o transmissor abaixo da tomada, ele lê a mais o valor ρ·g·h. Esse offset deve ser compensado no zero (LRV/URV deslocados).</div>
+    </div>
+    </div>
+
+    <!-- CALIBRAÇÃO -->
+    <div class="cpanel hidden" id="p-cal">
+    <div class="card">
+      <h2 style="margin-top:0">Calibração em 5 pontos</h2>
+      <div class="grid2">
+        <div><label class="lbl">LRV</label><input id="cl-lrv" inputmode="decimal" value="0"></div>
+        <div><label class="lbl">URV</label><input id="cl-urv" inputmode="decimal" value="10"></div>
+        <div><label class="lbl">Unidade</label><input id="cl-u" value="bar"></div>
+        <div><label class="lbl">Função de saída</label><select id="cl-f"><option value="lin">Linear</option><option value="sqrt">Raiz quadrada</option></select></div>
+        <div><label class="lbl">Tolerância (± % do span)</label><input id="cl-tol" inputmode="decimal" value="0,25"></div>
+        <div><label class="lbl">Sentido</label><select id="cl-dir"><option value="1">Só subida</option><option value="2">Subida e descida (histerese)</option></select></div>
+      </div>
+      <div id="cl-tab" style="margin-top:12px;overflow-x:auto"></div>
+      <div class="steps" id="cl-sum"></div>
+    </div>
+    </div>
+
+    <!-- Pt100 -->
+    <div class="cpanel hidden" id="p-temp">
+    <div class="card">
+      <h2 style="margin-top:0">Pt100 / Pt1000 (IEC 60751)</h2>
+      <div class="small muted">Callendar-Van Dusen, α = 0,00385. Útil para simular a entrada do transmissor de temperatura com uma década resistiva ou um calibrador.</div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label class="lbl">Sensor</label><select id="tp-r0"><option value="100">Pt100</option><option value="1000">Pt1000</option></select></div>
+        <div><label class="lbl">Eu tenho</label><select id="tp-m"><option value="t">a temperatura (°C)</option><option value="r">a resistência (Ω)</option></select></div>
+        <div><label class="lbl" id="tp-l">Temperatura (°C)</label><input id="tp-x" inputmode="decimal" value="100"></div>
+        <div></div>
+        <div><label class="lbl">Range do transmissor: LRV (°C)</label><input id="tp-lrv" inputmode="decimal" value="0"></div>
+        <div><label class="lbl">URV (°C)</label><input id="tp-urv" inputmode="decimal" value="200"></div>
+      </div>
+      <div class="out" id="tp-res"></div>
+      <div id="tp-tab" style="margin-top:10px"></div>
+    </div>
+    </div>
+
+    <!-- CONVERSÕES DE VAZÃO -->
+    <div class="cpanel hidden" id="p-vaz">
+    <div class="card">
+      <h2 style="margin-top:0">Mássica × volumétrica</h2>
+      <div class="grid2">
+        <div><label class="lbl">Vazão</label><input id="vz-q" inputmode="decimal" value="60"></div>
+        <div><label class="lbl">Unidade</label><select id="vz-qu"></select></div>
+        <div><label class="lbl">ρ (kg/m³)</label><input id="vz-r" inputmode="decimal" value="8,28"></div>
+      </div>
+      <div id="vz-tab" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h3>Velocidade e Reynolds na tubulação</h3>
+      <div class="grid2">
+        <div><label class="lbl">Vazão (m³/h, nas condições de operação)</label><input id="vv-q" inputmode="decimal" value="7246"></div>
+        <div><label class="lbl">D interno (mm)</label><input id="vv-d" inputmode="decimal" value="254,5"></div>
+        <div><label class="lbl">ρ (kg/m³)</label><input id="vv-r" inputmode="decimal" value="8,28"></div>
+        <div><label class="lbl">μ (cP)</label><input id="vv-mu" inputmode="decimal" value="0,021"></div>
+      </div>
+      <div class="steps" id="vv-out"></div>
+      <div class="small muted" style="margin-top:6px">Referências usuais: líquidos 1–3 m/s; vapor saturado 20–30 m/s; vapor superaquecido 30–50 m/s.</div>
+    </div>
+    <div class="card">
+      <h3>Gás: normal (Nm³/h) × real (m³/h)</h3>
+      <div class="grid2">
+        <div><label class="lbl">Eu tenho</label><select id="gn-m"><option value="n">Nm³/h</option><option value="r">m³/h real</option></select></div>
+        <div><label class="lbl">Vazão</label><input id="gn-q" inputmode="decimal" value="1000"></div>
+        <div><label class="lbl">Pressão de operação (bar g)</label><input id="gn-p" inputmode="decimal" value="5"></div>
+        <div><label class="lbl">Temperatura de operação (°C)</label><input id="gn-t" inputmode="decimal" value="40"></div>
+        <div><label class="lbl">Z (operação / normal)</label><input id="gn-z" inputmode="decimal" value="1"></div>
+        <div><label class="lbl">Patm (bar abs)</label><input id="gn-a" inputmode="decimal" value="1,01325"></div>
+      </div>
+      <div class="steps" id="gn-out"></div>
+      <div class="small muted" style="margin-top:6px">Condição normal: 0 °C e 1,01325 bar abs. Condição "standard" (Sm³) varia: 15 °C ou 20 °C. Confira a referência usada no projeto.</div>
+    </div>
+    </div>
+
+
+    <!-- TANQUE -->
+    <div class="cpanel hidden" id="p-tanque">
+    <div class="card">
+      <h2 style="margin-top:0">Volume e massa no tanque</h2>
+      <div class="grid2">
+        <div><label class="lbl">Formato</label><select id="tq-f"><option value="v">Cilindro vertical</option><option value="h">Cilindro horizontal</option><option value="r">Retangular</option></select></div>
+        <div><label class="lbl">ρ do produto (kg/m³)</label><input id="tq-r" inputmode="decimal" value="1000"></div>
+        <div><label class="lbl" id="tq-al">Diâmetro (m)</label><input id="tq-a" inputmode="decimal" value="3"></div>
+        <div id="tq-bw"><label class="lbl" id="tq-bl">Comprimento (m)</label><input id="tq-b" inputmode="decimal" value="6"></div>
+        <div id="tq-cw"><label class="lbl">Largura (m)</label><input id="tq-c" inputmode="decimal" value="2"></div>
+        <div><label class="lbl">Altura máxima útil (m)</label><input id="tq-hm" inputmode="decimal" value="4"></div>
+        <div><label class="lbl">Nível atual (m)</label><input id="tq-h" inputmode="decimal" value="2"></div>
+      </div>
+      <div class="out" id="tq-res"></div>
+      <div class="steps" id="tq-steps"></div>
+      <div id="tq-tab" style="margin-top:10px"></div>
+      <div class="small muted" style="margin-top:6px">No cilindro horizontal o volume não é linear com o nível: use a tabela para linearizar no CLP/DCS (strapping).</div>
+    </div>
+    </div>
+
+    <!-- CÉLULA DE CARGA -->
+    <div class="cpanel hidden" id="p-peso">
+    <div class="card">
+      <h2 style="margin-top:0">Célula de carga</h2>
+      <div class="small muted">Saída (mV) = sensibilidade (mV/V) × excitação (V) × carga / capacidade total.</div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label class="lbl">Capacidade de cada célula (kg)</label><input id="lc-cap" inputmode="decimal" value="5000"></div>
+        <div><label class="lbl">Número de células</label><input id="lc-n" inputmode="decimal" value="4"></div>
+        <div><label class="lbl">Sensibilidade (mV/V)</label><input id="lc-s" inputmode="decimal" value="2"></div>
+        <div><label class="lbl">Excitação (V)</label><input id="lc-e" inputmode="decimal" value="10"></div>
+        <div><label class="lbl">Peso morto / tara (kg)</label><input id="lc-t" inputmode="decimal" value="3000"></div>
+        <div><label class="lbl">Carga útil (produto) atual (kg)</label><input id="lc-w" inputmode="decimal" value="6000"></div>
+        <div><label class="lbl">Range do transmissor: LRV (kg líquido)</label><input id="lc-lrv" inputmode="decimal" value="0"></div>
+        <div><label class="lbl">URV (kg líquido)</label><input id="lc-urv" inputmode="decimal" value="12000"></div>
+      </div>
+      <div class="out" id="lc-res"></div>
+      <div class="steps" id="lc-steps"></div>
+      <div class="warn hidden" id="lc-warn"></div>
+    </div>
+    </div>
+
+    <!-- MASSA E FORÇA -->
+    <div class="cpanel hidden" id="p-massa">
+    <div class="card">
+      <h2 style="margin-top:0">Conversão de massa e força</h2>
+      <div class="numwrap"><input id="ms-v" inputmode="decimal" value="1000"><select id="ms-u" style="width:auto"></select></div>
+      <div id="ms-tab" style="margin-top:10px"></div>
+      <div class="small muted" style="margin-top:6px">Massa (kg) é a quantidade de matéria. Peso é força: P = m·g. Com g padrão (9,80665 m/s²), 1 kgf = 9,80665 N. Balanças industriais indicam massa, calibradas com pesos-padrão.</div>
+    </div>
+    </div>
+
+    <div class="card small muted">Ferramentas de apoio ao estudo e à pré-configuração. Valores finais de projeto seguem a folha de dados, a memória de cálculo do fabricante e as normas aplicáveis.</div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-v="inicio" class="on" onclick="go('inicio')"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+  <button data-v="treinar" onclick="go('treinar')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>Treinar</button>
+  <button data-v="cartoes" onclick="go('cartoes')"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v11"/></svg>Cartões</button>
+  <button data-v="formulas" onclick="go('formulas')"><svg viewBox="0 0 24 24"><path d="M5 5h14M5 12h8M5 19h11"/></svg>Fórmulas</button>
+  <button data-v="calc" onclick="go('calc')"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M8 15h2M12 15h2M16 11v6"/></svg>Calcular</button>
+</nav>
+
+<script>
+const TOPICS = {
+  fund:'Fundamentos', faixa:'Range, span e %', ma:'Sinal 4-20 mA', conv:'Sinal ↔ variável',
+  pres:'Pressão', temp:'Temperatura', niv:'Nível', vaz:'Vazão', ctrl:'Válvulas e controle',
+  pid:'P&ID e TAGs', cal:'Calibração e testes', int:'Integração'
+};
+const VF = ['Verdadeiro','Falso'];
+
+// Questões — n = resposta numérica; o/a = múltipla escolha
+const Q = [
+// ---------- FUNDAMENTOS ----------
+{id:'e01',t:'fund',q:'Em um sistema de medição, qual alternativa descreve melhor a função básica de um sensor?',o:['Executar a estratégia de controle do processo','Detectar uma grandeza ou condição física e responder a ela','Movimentar a válvula de controle','Registrar todas as medições em um banco de dados'],a:1,x:'O sensor detecta a grandeza física. Controlar é papel do controlador; movimentar a válvula é papel do elemento final.'},
+{id:'e02',t:'fund',q:'Na cadeia Processo → Sensor → [ ? ] → Sistema de controle, qual elemento transmite uma representação da variável medida para outro equipamento?',o:['Controlador','Transmissor','Válvula','Indicador'],a:1,x:'O transmissor condiciona o sinal do sensor e o envia em um padrão (ex.: 4-20 mA) ao sistema de controle.'},
+{id:'e03',t:'fund',q:'Em uma malha de vazão, o controlador envia comando para uma válvula automática na tubulação. Qual é o elemento final de controle?',o:['Transmissor','Controlador','Válvula de controle','Indicador'],a:2,x:'Elemento final é quem atua fisicamente no processo — aqui, a válvula de controle.'},
+{id:'e04',t:'fund',q:'O equipamento A apenas mostra a temperatura ao operador. O B compara a temperatura medida com um valor desejado e gera ação de controle. Qual associação está correta?',o:['A = controlador | B = sensor','A = transmissor | B = indicador','A = indicador | B = controlador','A = atuador | B = transmissor'],a:2,x:'Mostrar = indicar. Comparar PV com SP e gerar saída = controlar.'},
+{id:'e05',t:'fund',q:'Verdadeiro ou falso: sensor e transmissor são exatamente a mesma coisa e os termos podem ser trocados em qualquer situação.',o:VF,a:1,x:'O sensor detecta a grandeza; o transmissor condiciona e converte para um sinal padrão. Podem estar no mesmo invólucro, mas são funções diferentes.'},
+{id:'e06',t:'fund',q:'Qual sequência representa uma malha fechada simples?',o:['Transmissor → Controlador → Elemento final → Processo','Processo → Transmissor → Elemento final','Transmissor → Processo → Controlador','Transmissor → Elemento final → Controlador → Processo'],a:0,x:'Mede → decide → atua → o processo responde e é medido de novo.'},
+{id:'e07',t:'fund',q:'Qual descrição representa melhor o conceito geral de um transdutor?',o:['Elemento que necessariamente controla uma válvula','Dispositivo que converte uma forma de grandeza ou energia em outra, de modo relacionado','Equipamento destinado exclusivamente à indicação visual','Elemento usado somente em medições de temperatura'],a:1,x:'Transdutor converte uma grandeza/energia em outra (ex.: temperatura → resistência).'},
+{id:'e08',t:'fund',q:'Na malha PT-101 → PIC-101 → PV-101, qual elemento recebe a ação do controlador e atua fisicamente no processo?',o:['PT-101','PIC-101','PV-101','O processo'],a:2,x:'PV-101 é a válvula de controle (V = válvula/elemento final). Aqui "PV" é TAG, não "Process Variable".'},
+{id:'e10',t:'fund',q:'Verdadeiro ou falso: um sinal de 4-20 mA é a própria pressão, temperatura, vazão ou nível do processo.',o:VF,a:1,x:'O 4-20 mA é uma representação da variável. 12 mA não é "12 bar": é 50% da faixa configurada.'},
+{id:'e14',t:'fund',q:'Um medidor numa linha de processo mostra 120 m³/h. O que essa leitura representa?',o:['A pressão absoluta da linha','A temperatura do fluido','Uma vazão volumétrica','O nível do reservatório'],a:2,x:'m³/h = volume por tempo → vazão volumétrica.'},
+{id:'e19',t:'fund',q:'Qual elemento é mais diretamente associado à medição de temperatura?',o:['RTD / Pt100','Placa de orifício','Boia de nível','Manômetro Bourdon'],a:0,x:'Placa de orifício → vazão; boia → nível; Bourdon → pressão.'},
+{id:'e20',t:'fund',q:'Um instrumento no topo de um tanque envia ondas eletromagnéticas e usa o tempo de retorno para estimar a distância até a superfície. Qual tecnologia?',o:['Radar','RTD','Manômetro Bourdon','Coriolis'],a:0,x:'Ondas eletromagnéticas + tempo de retorno = radar de nível.'},
+// ---------- FAIXA ----------
+{id:'e21',t:'faixa',q:'Transmissor de pressão com LRV = 0 bar e URV = 16 bar. Qual é o SPAN?',n:16,u:'bar',x:'SPAN = URV − LRV = 16 − 0 = 16 bar.'},
+{id:'e22',t:'faixa',q:'Transmissor de temperatura com LRV = 20 °C e URV = 120 °C. Qual é o SPAN?',n:100,u:'°C',x:'120 − 20 = 100 °C.'},
+{id:'e23',t:'faixa',q:'Verdadeiro ou falso: se LRV = 20 °C e URV = 120 °C, o span é 120 °C.',o:VF,a:1,x:'Span = 120 − 20 = 100 °C. 120 °C é o URV, não o span.'},
+{id:'e24',t:'faixa',q:'Um transmissor de nível representa de 1,0 m até 5,0 m. Qual é o range configurado?',o:['0–5 m','1–5 m','4–5 m','4 m'],a:1,x:'Range é "de… até…" (1–5 m). O span seria 4 m.'},
+{id:'e25',t:'faixa',q:'Transmissor com LRV = −20 °C e URV = 80 °C. Qual é o SPAN?',n:100,u:'°C',x:'80 − (−20) = 100 °C. O range é −20 a 80 °C.'},
+{id:'e26',t:'faixa',q:'Range 0–100 °C. Temperatura atual: 25 °C. Qual percentual da faixa?',n:25,u:'%',x:'(25 − 0)/100 × 100 = 25%.'},
+{id:'e27',t:'faixa',q:'LRV = 20 °C, URV = 120 °C. Processo em 70 °C. Qual percentual da faixa?',n:50,u:'%',x:'(70 − 20)/100 = 0,50 → 50%.'},
+{id:'e28',t:'faixa',q:'Range 10–50 bar. Leitura atual: 40 bar. Qual percentual da faixa foi percorrido?',o:['60%','70%','75%','80%'],a:2,x:'Span = 40 bar. (40 − 10)/40 = 0,75 → 75%.'},
+{id:'e29',t:'faixa',q:'LRV = 20 °C, URV = 120 °C, temperatura 60 °C. Um aluno anotou "60 °C = 60%". Está correto?',o:['Sim, porque o valor é 60','Não. Representa 40% da faixa','Não. Representa 50% da faixa','Não. Representa 20% da faixa'],a:1,x:'(60 − 20)/100 = 40%. O percentual começa no LRV, não no zero.'},
+{id:'e30',t:'faixa',q:'LRV = 2 bar, URV = 10 bar, pressão atual 8 bar. Qual é o percentual da faixa?',n:75,u:'%',x:'Span = 8 bar; distância desde o LRV = 6 bar; 6/8 = 75%.'},
+// ---------- 4-20 mA ----------
+{id:'e31',t:'ma',q:'Em uma escala linear 4-20 mA, um sinal de 12 mA representa qual percentual?',o:['25%','40%','50%','60%'],a:2,x:'(12 − 4)/16 = 0,5 → 50%.'},
+{id:'e32',t:'ma',q:'Qual percentual da escala 4-20 mA corresponde a 8 mA?',n:25,u:'%',x:'(8 − 4)/16 = 0,25 → 25%.'},
+{id:'e33',t:'ma',q:'Verdadeiro ou falso: 16 mA representa 75% de uma escala linear 4-20 mA.',o:VF,a:0,x:'(16 − 4)/16 = 0,75 → 75%.'},
+{id:'e34',t:'ma',q:'Qual sinal corresponde a 25% de uma escala 4-20 mA?',n:8,u:'mA',x:'4 + 16 × 0,25 = 8 mA.'},
+{id:'e35',t:'ma',q:'O processo está em 75% da faixa. Qual sinal 4-20 mA representa esse percentual?',n:16,u:'mA',x:'4 + 16 × 0,75 = 16 mA.'},
+{id:'e36',t:'ma',q:'Qual sinal representa o limite superior (100%) de uma faixa padrão 4-20 mA?',o:['4 mA','12 mA','16 mA','20 mA'],a:3,x:'20 mA = 100% = URV.'},
+{id:'e38',t:'ma',q:'Um transmissor indica 10,4 mA na saída 4-20 mA. Qual é o percentual da faixa?',n:40,u:'%',x:'Retire o zero vivo: 10,4 − 4 = 6,4. Divida pelo span elétrico: 6,4/16 = 0,40 → 40%.'},
+{id:'e39',t:'ma',q:'Qual sinal 4-20 mA corresponde a 60% da faixa?',n:13.6,u:'mA',x:'4 + 16 × 0,60 = 4 + 9,6 = 13,6 mA.'},
+{id:'e40',t:'ma',q:'Um transmissor fornece 6,4 mA. Qual percentual da faixa?',n:15,u:'%',x:'(6,4 − 4)/16 = 2,4/16 = 0,15 → 15%.'},
+{id:'e41',t:'ma',q:'Um indicador recebe 18,4 mA. Qual o percentual da escala 4-20 mA?',n:90,u:'%',x:'(18,4 − 4)/16 = 14,4/16 = 0,90 → 90%.'},
+{id:'e43',t:'ma',q:'O processo está em 35% da faixa. Qual sinal 4-20 mA?',n:9.6,u:'mA',x:'4 + 16 × 0,35 = 4 + 5,6 = 9,6 mA.'},
+{id:'e44',t:'ma',q:'Um controlador deve representar 82,5% da faixa em 4-20 mA. Qual o sinal?',n:17.2,u:'mA',x:'16 × 0,825 = 13,2 → 13,2 + 4 = 17,2 mA.'},
+{id:'e45',t:'ma',q:'Um estudante disse: "20 mA significa 20% da faixa, porque o sinal vale 20". Qual é o erro?',o:['Nenhum, está correto','20 mA representa 100% da faixa linear 4-20 mA','20 mA representa 50% da faixa','O percentual não pode ser relacionado a 4-20 mA'],a:1,x:'mA não é percentual direto: 4 mA = 0%, 20 mA = 100%.'},
+// ---------- SINAL ↔ VARIÁVEL ----------
+{id:'e46',t:'conv',q:'Transmissor de pressão 0–10 bar. Sinal atual 12 mA. Qual pressão?',n:5,u:'bar',x:'12 mA → 50% → 0 + 10 × 0,5 = 5 bar.'},
+{id:'e47',t:'conv',q:'Transmissor 0–200 °C. Saída 16 mA. Qual temperatura?',n:150,u:'°C',x:'16 mA → 75% → 200 × 0,75 = 150 °C.'},
+{id:'e48',t:'conv',q:'LRV = 20 °C, URV = 120 °C. Sinal atual 8 mA. Qual temperatura?',n:45,u:'°C',x:'8 mA → 25%; span 100 °C → 25 °C; somar LRV: 20 + 25 = 45 °C.'},
+{id:'e49',t:'conv',q:'Range 2–10 bar. Sinal 12 mA. Qual pressão?',n:6,u:'bar',x:'50% de 8 bar = 4 bar; 2 + 4 = 6 bar.'},
+{id:'e50',t:'conv',q:'LRV = −50 °C, URV = 150 °C. Sinal 10,4 mA. Qual temperatura?',n:30,u:'°C',x:'10,4 mA → 40%; span 200 °C → 80 °C; −50 + 80 = 30 °C.'},
+{id:'e51',t:'conv',q:'Transmissor de nível 0–4,0 m. Display de corrente: 18,4 mA. Qual nível?',n:3.6,u:'m',x:'18,4 mA → 90%; 4 × 0,9 = 3,6 m.'},
+{id:'e52',t:'conv',q:'Range 100–500 kPa. Sinal 6,4 mA. Qual pressão?',n:160,u:'kPa',x:'6,4 mA → 15%; span 400 → 60 kPa; 100 + 60 = 160 kPa.'},
+{id:'e53',t:'conv',q:'Transmissor de vazão 0–300 m³/h. Sinal 13,6 mA. Qual vazão?',n:180,u:'m³/h',x:'13,6 mA → 60%; 300 × 0,6 = 180 m³/h.'},
+{id:'e54',t:'conv',q:'Range 50–250 °C. Sinal 14,4 mA. Qual temperatura?',n:180,u:'°C',x:'(14,4 − 4)/16 = 65%; span 200 → 130 °C; 50 + 130 = 180 °C.'},
+{id:'e55',t:'conv',q:'Range 20–120 °C, sinal 4 mA. Um estudante disse: "a temperatura é 0 °C porque 4 mA = 0%". Qual o erro?',o:['Nenhum. O valor é 0 °C','4 mA representa o LRV da faixa, portanto 20 °C','4 mA representa 50 °C','O sinal não pode representar temperatura'],a:1,x:'0% da faixa = LRV, que aqui é 20 °C.'},
+{id:'e56',t:'conv',q:'Transmissor 0–100 °C. Temperatura atual 25 °C. Qual sinal 4-20 mA?',n:8,u:'mA',x:'25% → 4 + 16 × 0,25 = 8 mA.'},
+{id:'e57',t:'conv',q:'Range 0–16 bar. Pressão atual 12 bar. Qual sinal deve ser gerado?',n:16,u:'mA',x:'12/16 = 75% → 16 mA.'},
+{id:'e58',t:'conv',q:'Range 20–120 °C. Temperatura medida 45 °C. Qual sinal 4-20 mA?',n:8,u:'mA',x:'(45 − 20)/100 = 25% → 8 mA.'},
+{id:'e59',t:'conv',q:'LRV = −20 °C, URV = 80 °C. Temperatura atual 30 °C. Qual sinal?',n:12,u:'mA',x:'(30 − (−20))/100 = 50% → 12 mA.'},
+{id:'e60',t:'conv',q:'Range 2–10 bar. Pressão atual 4 bar. Qual o sinal 4-20 mA?',n:8,u:'mA',x:'Span 8 bar; 4 − 2 = 2 bar; 2/8 = 25% → 8 mA.'},
+// ---------- PRESSÃO ----------
+{id:'e61',t:'pres',q:'Transmissor diferencial: P1 = 8 bar, P2 = 5 bar. Considerando ΔP = P1 − P2, qual a pressão diferencial?',n:3,u:'bar',x:'8 − 5 = 3 bar.'},
+{id:'e62',t:'pres',q:'Exemplo didático: pressão manométrica 4 bar, atmosférica 1 bar. Qual a pressão absoluta?',n:5,u:'bar(a)',x:'Pabs = Pg + Patm = 4 + 1 = 5 bar(a).'},
+{id:'e63',t:'pres',q:'Exemplo didático: pressão absoluta 6 bar(a), atmosférica 1 bar. Qual a pressão manométrica?',n:5,u:'bar(g)',x:'Pg = Pabs − Patm = 6 − 1 = 5 bar(g).'},
+{id:'e65',t:'pres',q:'Qual alternativa diferencia melhor um manômetro local de um transmissor de pressão?',o:['O manômetro controla o processo; o transmissor não mede pressão','O manômetro pode dar indicação local; o transmissor disponibiliza um sinal representativo da pressão para outro sistema','Os dois são sempre o mesmo equipamento','O transmissor só pode ser usado com temperatura'],a:1,x:'Manômetro = indicação local. Transmissor = envia sinal (ex.: 4-20 mA) para outro sistema.'},
+{id:'e66',t:'pres',q:'Transmissor de ΔP configurado para 0–4 bar. ΔP atual = 1 bar. Qual o sinal 4-20 mA?',n:8,u:'mA',x:'1/4 = 25% → 4 + 16 × 0,25 = 8 mA.'},
+// ---------- TEMPERATURA ----------
+{id:'e67',t:'temp',q:'Qual tecnologia usa a variação de resistência elétrica de um elemento metálico, como no Pt100?',o:['RTD / Pt100','Placa de orifício','Radar','Bourdon'],a:0,x:'RTD = Resistance Temperature Detector. Pt100 ≈ 100 Ω a 0 °C.'},
+{id:'e68',t:'temp',q:'Qual descrição está mais relacionada ao princípio de um termopar?',o:['Mede nível por reflexão de ondas eletromagnéticas','Usa uma relação termoelétrica entre materiais diferentes para produzir um sinal relacionado à diferença de temperatura','Mede vazão exclusivamente pela rotação de uma hélice','Determina pressão pela deformação de um tubo Bourdon'],a:1,x:'Dois metais diferentes numa junção geram pequena tensão (mV) ligada à diferença de temperatura.'},
+{id:'e69',t:'temp',q:'Transmissor de temperatura 0–300 °C. Sinal atual 12 mA. Qual temperatura?',n:150,u:'°C',x:'12 mA → 50% → 150 °C.'},
+{id:'e71',t:'temp',q:'LRV = −50 °C, URV = 150 °C. Sinal atual 16 mA. Qual temperatura?',n:100,u:'°C',x:'16 mA → 75%; span 200 → 150 °C; −50 + 150 = 100 °C.'},
+{id:'e72',t:'temp',q:'"O Pt100 envia obrigatoriamente 4-20 mA ao controlador, porque todo sensor de temperatura já é um transmissor." Qual é o erro?',o:['Nenhum. Todo Pt100 gera 4-20 mA','O Pt100 é um elemento sensor; um transmissor pode converter a medição em outro sinal, como 4-20 mA','O Pt100 é uma válvula de controle','4-20 mA só pode representar pressão'],a:1,x:'Sensor gera uma variável elétrica (resistência). O transmissor condiciona e converte para 4-20 mA, HART etc.'},
+// ---------- NÍVEL ----------
+{id:'e73',t:'niv',q:'Um tanque tem altura útil de medição de 4,0 m. O nível está em 75%. Qual a altura do líquido?',n:3,u:'m',x:'4 × 0,75 = 3,0 m.'},
+{id:'e74',t:'niv',q:'Um instrumento informa continuamente 23%, 41%, 68%, 82% do nível. Que tipo de informação é essa?',o:['Detecção somente de nível alto','Medição contínua de nível','Somente alarme discreto','Medição de temperatura'],a:1,x:'Valores ao longo da faixa = medição contínua. Detecção pontual só diria "alto/baixo".'},
+{id:'e75',t:'niv',q:'Instrumento A usa ondas eletromagnéticas; o B usa ondas acústicas. Qual associação está correta?',o:['A = radar | B = ultrassom','A = ultrassom | B = radar','A = RTD | B = Coriolis','A = manômetro | B = termopar'],a:0,x:'Eletromagnética → radar. Acústica → ultrassom.'},
+{id:'e76',t:'niv',q:'Transmissor de nível 0–5,0 m. Sinal enviado: 12 mA. Qual nível?',n:2.5,u:'m',x:'12 mA → 50% → 2,5 m.'},
+{id:'e77',t:'niv',q:'Transmissor 0–6,0 m. Nível atual 4,5 m. Qual sinal 4-20 mA?',n:16,u:'mA',x:'4,5/6 = 75% → 16 mA.'},
+{id:'e78',t:'niv',q:'LRV = 1,0 m, URV = 5,0 m. Sinal atual 13,6 mA. Qual é o nível?',n:3.4,u:'m',x:'Span 4 m; (13,6 − 4)/16 = 60%; 4 × 0,6 = 2,4 m; 1 + 2,4 = 3,4 m.'},
+// ---------- VAZÃO ----------
+{id:'e80',t:'vaz',q:'Uma restrição é instalada na tubulação e um transmissor mede a diferença de pressão entre montante e jusante. Qual tecnologia?',o:['Pressão diferencial com elemento primário restritivo (ex.: placa de orifício)','Radar de nível','RTD','Termopar'],a:0,x:'Placa de orifício / Venturi: a vazão é inferida pela ΔP na restrição.'},
+{id:'e81',t:'vaz',q:'Qual tecnologia usa indução eletromagnética para medir a velocidade de um fluido eletricamente condutivo?',o:['Eletromagnético','Termopar','Radar','Bourdon'],a:0,x:'Medidor eletromagnético (magmeter): exige fluido com condutividade adequada.'},
+{id:'e82',t:'vaz',q:'Qual tecnologia é associada à medição direta de vazão mássica, usando tubos em vibração controlada?',o:['Coriolis','Ultrassom de nível','Pt100','Manômetro Bourdon'],a:0,x:'Coriolis mede vazão mássica diretamente (kg/h, t/h).'},
+{id:'e83',t:'vaz',q:'Transmissor de vazão 0–400 m³/h. Sinal atual 10,4 mA. Qual vazão?',n:160,u:'m³/h',x:'10,4 mA → 40%; 400 × 0,4 = 160 m³/h.'},
+{id:'e84',t:'vaz',q:'Malha FT-101 → FIC-101 → FV-101. Um estudante disse: "FIC-101 é o transmissor e FT-101 é o controlador". Qual o erro?',o:['Nenhum','As funções foram invertidas: FT transmite; FIC indica/controla','FV é o transmissor','Nenhuma tag tem relação com vazão'],a:1,x:'F = vazão; T = transmissão; I = indicação; C = controle; V = válvula.'},
+// ---------- CONTROLE ----------
+{id:'e85',t:'ctrl',q:'Qual é a função conceitual do posicionador?',o:['Converter energia em força ou movimento para mover a válvula','Comparar o comando de posição com a posição real e atuar para reduzir a diferença','Medir a vazão da linha','Definir o setpoint da malha'],a:1,x:'Quem converte energia em movimento é o atuador. O posicionador "fecha a malha" da posição.'},
+{id:'e86',t:'ctrl',q:'Convenção ERRO = SP − PV. SP = 60%, PV = 52%. Qual é o erro (em pontos percentuais)?',n:8,u:'p.p.',x:'60 − 52 = +8 p.p. O valor medido está 8 p.p. abaixo do SP.'},
+{id:'e87',t:'ctrl',q:'Verdadeiro ou falso: se a válvula está em 50% de posição, a vazão real é obrigatoriamente 50% da vazão máxima.',o:VF,a:1,x:'A vazão real depende da característica da válvula, do ΔP e do sistema.'},
+{id:'e88',t:'ctrl',q:'O aumento da pressão de atuação faz a válvula se mover para maior abertura. Como se classifica essa ação?',o:['Air to Open','Air to Close','Fail Open','Fail Last'],a:0,x:'Mais ar → mais aberta = Air to Open (ATO).'},
+{id:'e89',t:'ctrl',q:'Verdadeiro ou falso: se uma válvula é Air to Open, ela é obrigatoriamente Fail Open em qualquer tipo de falha.',o:VF,a:1,x:'Ação normal (ATO/ATC) e posição de falha são conceitos diferentes. Depende do tipo de falha e da configuração.'},
+{id:'e90',t:'ctrl',q:'Posicionador recebe comando de 60%. Posição real: 54%. Considerando DESVIO = desejada − real, qual o desvio?',n:6,u:'p.p.',x:'60 − 54 = +6 p.p. Ainda há diferença a corrigir.'},
+// ---------- P&ID ----------
+{id:'p01',t:'pid',q:'Na TAG PIC-101, o que significa cada parte (leitura didática)?',o:['P = pressão, I = indicação, C = controle, 101 = identificação da malha','P = proporcional, I = integral, C = derivativo','P = painel, I = instrumento, C = campo','P = pressão, I = intertravamento, C = chave'],a:0,x:'Primeira letra = variável; seguintes = funções; número = malha (conforme convenção do projeto). Cuidado: PIC não é PID.'},
+{id:'p02',t:'pid',q:'Na TAG TT-101:',o:['As duas letras T significam temperatura','O primeiro T é temperatura; o segundo é transmissão','O primeiro T é transmissão; o segundo é temperatura','TT significa "teste de temperatura"'],a:1,x:'A posição da letra muda o significado.'},
+{id:'p03',t:'pid',q:'Leitura didática de LAH-201:',o:['Alarme de nível alto','Alarme de nível baixo','Chave de pressão alta','Indicação de nível horizontal'],a:0,x:'L = nível, A = alarme, H = high. Alarme não significa automaticamente trip: consulte a lógica.'},
+{id:'p04',t:'pid',q:'Leitura didática de PSH-301:',o:['Chave (switch) / função discreta associada à pressão alta','Alarme de pressão alta','Indicador de pressão','Válvula de segurança'],a:0,x:'P = pressão, S = switch, H = high.'},
+{id:'p05',t:'pid',q:'PT-101, PIC-101 e PV-101 compartilham o número 101. Isso normalmente indica:',o:['Que são o mesmo equipamento','Que fazem parte da mesma malha, com funções diferentes (conforme a convenção do projeto)','Área 1, equipamento 01, de forma universal','Que estão fisicamente lado a lado'],a:1,x:'Letras = função; número = identificação. A lógica exata do número vem do projeto.'},
+{id:'p06',t:'pid',q:'Linha A liga tanque → bomba → válvula. Linha B liga LT-201 → LIC-201. Qual a classificação mais coerente?',o:['A = sinal | B = processo','A = processo | B = sinal','As duas transportam fluido','As duas são obrigatoriamente cabos elétricos'],a:1,x:'Processo = fluido. Sinal = informação/comando entre funções de instrumentação.'},
+{id:'p07',t:'pid',q:'Verdadeiro ou falso: a linha de sinal no P&ID mostra o trajeto físico exato do cabo na planta.',o:VF,a:1,x:'O P&ID mostra relações funcionais, não o roteamento físico. Layout e diagramas elétricos são outros documentos.'},
+{id:'p08',t:'pid',q:'Malha TT-201 → TIC-201 → TV-201, com a válvula na linha da utilidade de um trocador. Qual é a variável manipulada?',o:['A temperatura','A vazão da utilidade','O setpoint','O sinal 4-20 mA'],a:1,x:'Controlada = temperatura. Manipulada (MV) = vazão da utilidade. Uma malha controla uma variável alterando outra.'},
+{id:'p09',t:'pid',q:'Malha LT-301 → LIC-301 → LV-301. Se o nível sobe, a válvula abre ou fecha?',o:['Sempre abre','Sempre fecha','Depende: posição da válvula (entrada ou saída), ação do controlador, ação da válvula e filosofia do processo','A válvula não se move'],a:2,x:'Não existe sentido universal. Válvula na saída vs. na entrada inverte a lógica.'},
+{id:'p10',t:'pid',q:'No contexto de um controlador, "PV" significa:',o:['Pressure Valve','Process Variable — valor medido da variável controlada','Painel de válvulas','Posição da válvula'],a:1,x:'Já PV-101 como TAG pode ser uma válvula de pressão. Contexto importa.'},
+{id:'p11',t:'pid',q:'Um P&ID tem LT-201 → LIC-201 → LV-201, um PI-202 e um TT-203 sem ligação a controlador. Quantas malhas de controle fechadas há?',o:['Uma (201)','Duas','Três','Nenhuma'],a:0,x:'Malha completa = medição + controle + ação. PI-202 só indica; TT-203 não está ligado a controlador.'},
+{id:'p12',t:'pid',q:'Na convenção didática do manual, uma bolha simples (sem linha horizontal) costuma representar:',o:['Instrumento/função em campo','Função em painel','Função em sistema digital (DCS/CLP)','Equipamento de processo'],a:0,x:'Bolha com linha → painel; símbolo de sistema → DCS/CLP. Sempre confirme na legenda do P&ID.'},
+{id:'p13',t:'pid',q:'Num P&ID, LT-301 e TIC-302 aparecem desenhados lado a lado. Eles pertencem à mesma malha?',o:['Sim, pela proximidade','Não necessariamente — a conexão é definida pelas linhas, números e lógica, não pela proximidade','Sim, porque ambos são instrumentos','Só se tiverem a mesma cor'],a:1,x:'Proximidade não é conexão. Siga variável + número + linhas.'},
+{id:'p14',t:'pid',q:'Em LT-301 → LIC-301 → LV-301, o LT e a LV estão no processo e a função LIC no sistema de controle. Qual afirmação é coerente?',o:['As três tags são obrigatoriamente equipamentos físicos lado a lado no campo','A função LIC pode estar implementada num sistema de controle, enquanto LT e LV podem ser elementos de campo','LIC significa linha de processo','LV é obrigatoriamente um indicador local'],a:1,x:'Nem toda bolha é uma caixa física separada no campo.'},
+// ---------- CALIBRAÇÃO ----------
+{id:'c01',t:'cal',q:'Referência: 5,00 bar. Indicação: 5,12 bar. Qual é o erro?',n:0.12,u:'bar',x:'Erro = indicação − referência = 5,12 − 5,00 = +0,12 bar (indicou acima).'},
+{id:'c02',t:'cal',q:'Referência: 100,0 °C. Indicação: 99,4 °C. Qual é o erro?',n:-0.6,u:'°C',x:'99,4 − 100,0 = −0,6 °C (indicou abaixo).'},
+{id:'c03',t:'cal',q:'Referência: 5,00 bar. Indicação: 4,90 bar. Qual é o erro?',n:-0.1,u:'bar',x:'4,90 − 5,00 = −0,10 bar. Armadilha: muitos respondem +0,10.'},
+{id:'c04',t:'cal',q:'Range 0–10 bar. Referência 5,00, indicação 5,10 bar. Qual o erro em % do span?',n:1,u:'%',x:'Erro +0,10 bar; 0,10/10 × 100 = 1% do span.'},
+{id:'c05',t:'cal',q:'Range 20–100 °C. Referência 60,0, indicação 60,8 °C. Qual o erro em % do span?',n:1,u:'%',x:'Span 80 °C; 0,8/80 × 100 = 1% do span.'},
+{id:'c06',t:'cal',q:'Transmissor: saída esperada 16,00 mA, observada 16,12 mA. Qual o erro em % do span elétrico?',n:0.75,u:'%',x:'0,12/16 × 100 = 0,75% do span elétrico.'},
+{id:'c07',t:'cal',q:'Referência 100,0 °C, indicação 102,0 °C. Qual o erro percentual em relação à referência?',n:2,u:'%',x:'Absoluto +2,0 °C; relativo 2/100 = 0,02; percentual 2%.'},
+{id:'c08',t:'cal',q:'Qual a diferença entre calibração e ajuste?',o:['São sinônimos','Calibração compara e registra a relação indicação × referência; ajuste modifica o comportamento do instrumento','Calibração sempre inclui ajuste obrigatório','O ajuste deve vir antes de qualquer calibração'],a:1,x:'Calibrar = conhecer/comparar. Ajustar = modificar. Após ajuste, nova calibração/verificação.'},
+{id:'c09',t:'cal',q:'Referência 100,0 °C. Medições: 104,9 / 105,0 / 105,1 / 105,0. Isso indica:',o:['Alta exatidão e alta precisão','Baixa exatidão e alta precisão','Alta exatidão e baixa precisão','Baixa exatidão e baixa precisão'],a:1,x:'Agrupadas (precisas), mas longe da referência (pouco exatas).'},
+{id:'c10',t:'cal',q:'A histerese observa:',o:['O comportamento ao longo da faixa (reta)','A diferença entre subida e descida no mesmo ponto','O comportamento ao longo do tempo','A menor variação distinguível'],a:1,x:'Linearidade → faixa. Histerese → direção. Estabilidade → tempo.'},
+{id:'c11',t:'cal',q:'Verdadeiro ou falso: um display com mais casas decimais garante maior exatidão.',o:VF,a:1,x:'Mais dígitos = resolução, não exatidão.'},
+{id:'c12',t:'cal',q:'Um transmissor 0–10 bar está lendo 3,7 mA. Qual a interpretação correta?',o:['Pressão negativa de −0,19 bar','O instrumento certamente quebrou','Está fora da faixa nominal: consultar lógica/diagnóstico do equipamento e do sistema antes de concluir','Leitura normal de 0 bar'],a:2,x:'Abaixo de 4 mA pode ser underrange, diagnóstico, falha ou outra convenção. É informação a interpretar, não causa pronta.'},
+{id:'c13',t:'cal',q:'No ponto de 100%, erro +0,12 bar. Critério de aceitação: ±0,10 bar. Conclusão?',o:['Dentro do critério','Fora do critério','Não dá para concluir nada','O ajuste é automaticamente obrigatório'],a:1,x:'|0,12| > 0,10 → fora do critério. Isso não torna o ajuste automático: a decisão segue procedimento e autorização.'},
+{id:'c14',t:'cal',q:'Indicador configurado 0–100 °C recebe 12,00 mA e mostra 51,2 °C. Qual o erro de indicação?',n:1.2,u:'°C',x:'12 mA → 50% → 50,0 °C esperado; 51,2 − 50,0 = +1,2 °C.'},
+{id:'c15',t:'cal',q:'O indicador deveria ser 0–100 °C, mas está configurado 0–200 °C. Com 12 mA ele mostra:',o:['50 °C','100 °C','12 °C','200 °C'],a:1,x:'50% de 0–200 = 100 °C. O sinal pode estar certo e a escala errada.'},
+{id:'c16',t:'cal',q:'Na bancada: gerador de pressão, manômetro padrão e transmissor. Quem é o DUT/UUT?',o:['O gerador','O manômetro padrão','O transmissor sob teste','O calibrador'],a:2,x:'Fonte cria a condição; padrão referencia; DUT (Device Under Test) é avaliado.'},
+{id:'c17',t:'cal',q:'Rastreabilidade é:',o:['Ter o número de série do equipamento','Poder relacionar um resultado a referências adequadas por uma cadeia documentada de calibrações','Ter um certificado assinado','Repetir a medição 5 vezes'],a:1,x:'É a cadeia de referências documentada (ex.: até o SI via laboratórios RBC/INMETRO).'},
+{id:'c18',t:'cal',q:'Posicionador recebe 12 mA (alvo 50%). Posição real observada: 47%. Qual a diferença (real − alvo)?',n:-3,u:'p.p.',x:'47 − 50 = −3 p.p. Comando é intenção; posição real é resposta.'},
+{id:'c19',t:'cal',q:'Verdadeiro ou falso: um comando de 12 mA prova que a válvula está em 50%.',o:VF,a:1,x:'Significa apenas um comando de 50%. A posição real precisa ser observada (feedback).'},
+// ---------- INTEGRAÇÃO ----------
+{id:'e97',t:'int',q:'PT-701 → PIC-701 → PV-701. PT-701: 0–20 bar, sinal 16 mA. Qual pressão está sendo medida?',n:15,u:'bar',x:'16 mA → 75%; 20 × 0,75 = 15 bar. PT transmite, PIC controla, PV-701 é o elemento final.'},
+{id:'e98',t:'int',q:'LT-801 (LRV 1,0 m, URV 5,0 m), sinal 13,6 mA, LV-801 na saída do tanque. Qual o nível?',n:3.4,u:'m',x:'60% de 4 m = 2,4 m; 1 + 2,4 = 3,4 m. Grandeza manipulada: vazão de saída.'},
+{id:'e99',t:'int',q:'TT-901 configurado de −20 a 180 °C. Temperatura atual 130 °C. Qual sinal 4-20 mA?',n:16,u:'mA',x:'Span 200 °C; (130 + 20)/200 = 75% → 16 mA.'},
+{id:'e100',t:'int',q:'FT-1001: 100–500 m³/h, sinal 14,4 mA. SP = 400 m³/h. Considerando ERRO = SP − PV, qual é o erro?',n:40,u:'m³/h',x:'14,4 mA → 65%; 400 × 0,65 = 260; 100 + 260 = 360 m³/h (PV); 400 − 360 = +40 m³/h.'},
+{id:'e100b',t:'int',q:'Ainda no FT-1001 → FIC-1001 → FV-1001: se FV-1001 está em 50% de posição, a vazão real é exatamente 50% da máxima?',o:['Sim','Não'],a:1,x:'Posição ≠ vazão. Depende da característica da válvula, do ΔP e do sistema.'}
+];
+
+const DECKS = {
+ 'Fundamentos':[
+  ['Sensor','Detecta uma grandeza física (ex.: temperatura) e fornece uma variável elétrica relacionada (ex.: resistência).','Sensor ≠ transmissor.'],
+  ['Transmissor','Condiciona o sinal do sensor e converte para um padrão industrial (4-20 mA, HART…).','Ele envia a representação da variável para outro sistema.'],
+  ['Transdutor','Converte uma forma de grandeza ou energia em outra, de modo relacionado.','Ex.: temperatura → resistência; pressão → corrente.'],
+  ['Elemento final','Quem atua fisicamente no processo — normalmente a válvula de controle.','Mede → decide → ATUA.'],
+  ['Malha fechada','Processo → medição → controlador → elemento final → processo responde e é medido de novo.','A realimentação é o que fecha a malha.'],
+  ['Variável controlada × manipulada','Controlada: o que se quer manter (ex.: temperatura). Manipulada: o que se altera para influenciá-la (ex.: vazão da utilidade).','Uma malha controla uma variável alterando outra.'],
+  ['SP, PV e MV','SP: onde quero. PV: onde estou (valor medido). MV: o que altero para influenciar a PV.','Saída do controlador (sinal) ≠ MV (grandeza física).']
+ ],
+ 'Sinais':[
+  ['Range','Os limites da faixa: "de… até…" (ex.: 20–120 °C).','Range não é um número só.'],
+  ['LRV / URV','Lower Range Value (início da faixa) e Upper Range Value (fim da faixa).','0% = LRV; 100% = URV.'],
+  ['Span','URV − LRV: a distância entre os limites.','20–120 °C → span 100 °C, não 120.'],
+  ['Zero vivo','No 4-20 mA, 0% da faixa é 4 mA, não 0 mA.','Por isso: (mA − 4) antes de dividir.'],
+  ['Span elétrico','20 − 4 = 16 mA.','% = (mA − 4)/16.'],
+  ['Pontos 4·8·12·16·20','0% · 25% · 50% · 75% · 100%.','+4 mA a cada 25%.'],
+  ['Zero elevado / suprimido','A faixa pode começar acima (elevado) ou abaixo (suprimido) do zero físico.','Range 50–250 °C: 4 mA = 50 °C.'],
+  ['Fora de 4-20 mA','Abaixo de 4 ou acima de 20 mA pode ser under/overrange, diagnóstico, falha ou convenção.','Informação a interpretar, não causa pronta.'],
+  ['Pt100','RTD de platina, ≈100 Ω a 0 °C; resistência sobe quase linearmente com a temperatura.','Simular Pt100 = simular resistência.'],
+  ['Termopar','Dois metais diferentes geram pequena tensão (mV) relacionada à diferença de temperatura.','Precisa saber o tipo (K, J, T…) e a compensação da junção de referência.']
+ ],
+ 'Calibração':[
+  ['Calibração','Comparação entre valores indicados por um instrumento e valores de uma referência, sob condições definidas.','Comparar + registrar. Não é "mexer no instrumento".'],
+  ['Ajuste','Modifica o comportamento do instrumento para reduzir o desvio.','Depois do ajuste: nova calibração.'],
+  ['Verificação','Confirma se o instrumento atende a um critério definido (sim/não).','Verificar → atende? Calibrar → quanto difere? Ajustar → modificar?'],
+  ['Erro de medição','Indicação − referência.','Acima da referência → positivo; abaixo → negativo.'],
+  ['Exatidão','Quão próximo o resultado está da referência.','Perto do alvo.'],
+  ['Precisão','Quão próximos os resultados estão entre si.','Pontos agrupados — mesmo longe do alvo.'],
+  ['Repetibilidade','Mesma condição aplicada de novo: os resultados ficam próximos?','Repetir um valor errado ainda é boa repetibilidade.'],
+  ['Resolução','Menor variação que o sistema consegue distinguir ou representar.','Mais dígitos ≠ mais exatidão.'],
+  ['Sensibilidade','Quanto a saída muda quando a entrada muda.','Ex.: 0–10 bar/4-20 mA → +1 bar = +1,6 mA.'],
+  ['Linearidade · Histerese · Estabilidade','Linearidade olha a faixa; histerese, subida × descida; estabilidade, o tempo.','Faixa · direção · tempo.'],
+  ['Rastreabilidade','Relacionar um resultado a referências adequadas por cadeia documentada de calibrações.','Não é o número de série.'],
+  ['DUT / UUT','Device/Unit Under Test: o instrumento sob teste.','Fonte cria → padrão referencia → DUT é testado.'],
+  ['Tolerância / critério','Limite de aceitação definido pela aplicação, procedimento, fabricante ou norma.','O critério deve existir antes do resultado.'],
+  ['Incerteza','Faixa de dúvida associada ao resultado (ex.: expandida k = 2).','Pode entrar na regra de decisão.'],
+  ['Gerar × medir sinal','Gerar (source): o calibrador cria o sinal. Medir (measure): observa um sinal que já existe.','"Colocar o calibrador em 12 mA" depende do modo.']
+ ],
+ 'P&ID e controle':[
+  ['P&ID','Mapa das relações entre equipamentos, tubulações, instrumentos, sinais e controle.','Não é foto nem desenho em escala.'],
+  ['Primeira letra da TAG','Variável: P pressão, T temperatura, F vazão, L nível, A análise.','Primeiro: qual variável?'],
+  ['Letras seguintes','T transmissão, I indicação, C controle, R registro, A alarme, S switch, V válvula.','TT: 1º T = temperatura, 2º T = transmissão.'],
+  ['Modificadores','H high, L low, HH alto-alto, LL baixo-baixo.','LAH = alarme de nível alto. Posição da letra importa.'],
+  ['Número da TAG','Identifica a malha ou item, conforme a convenção do projeto.','Mesmo número → provavelmente mesma malha.'],
+  ['Bolhas','Simples → campo; com linha → painel; símbolo de sistema → DCS/CLP (convenção didática).','Sempre consulte a legenda.'],
+  ['Linha de processo × sinal','Processo transporta fluido; sinal transporta informação ou comando.','Linha de sinal não é trajeto de cabo.'],
+  ['Air to Open / Air to Close','Mais pressão de atuação → mais aberta (ATO) ou mais fechada (ATC).','Ação normal ≠ posição de falha.'],
+  ['Atuador × posicionador','Atuador converte energia em movimento. Posicionador compara comando × posição real e corrige.','Comando é intenção; posição real é resposta.'],
+  ['Ler um P&ID em 8 passos','Equipamento → processo → instrumentos → tags → sinais → controlador → elemento final → volta ao processo.','Escolha uma malha, termine, depois vá para a próxima.']
+ ]
+};
+
+const PDFS = [
+  ['100 Exercícios e Cálculos de Instrumentação Industrial','1P0JmVTy1SltgITt3o67tD6OIZCCXAIJf','50 páginas · exercícios, gabarito e resoluções'],
+  ['Guia Visual de Calibração e Testes de Instrumentos','1IQx3uLS2vycLepwTt7f4IO7TrgqpnfQy','50 páginas · erro, exatidão, 4-20 mA, certificados'],
+  ['Manual Visual de P&ID, TAGs e Diagramas de Malha','171i9bA_9LBCi24BgI42RrRWruMIyhUwt','48 páginas · TAGs, bolhas, linhas e malhas'],
+  ['Atlas Visual de Válvulas, Atuadores e Posicionadores','1FWFtmMe68uOctZw2Jl2G53rLnc1ziHy1','48 páginas · válvulas, atuadores e posicionadores'],
+  ['Biblioteca Visual da Instrumentação Industrial','1i0o3Gm-xwmv9lZSoAWI19lpNO2n7m-Hf','98 páginas · arquivo grande (61 MB)']
+];
+function renderPdfs(){
+  const box=document.getElementById('pdf-list'); if(!box) return;
+  box.innerHTML=PDFS.map(([t,id,d])=>`<a class="opt" style="text-decoration:none;display:flex;gap:10px;align-items:center" href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener">
+    <span style="font-size:1.3rem">📄</span><span><b style="font-weight:600;display:block">${t}</b><span class="small muted">${d}</span></span></a>`).join('');
+}
+
+// ---------- STATE ----------
+const KEY='instr-study-v1';
+let S={ans:{}}; // ans[id] = {ok:bool, n:tries}
+try{ const r=localStorage.getItem(KEY); if(r) S=JSON.parse(r)||S; }catch(e){}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+let selTopics=new Set(Object.keys(TOPICS));
+let mode='aleatorio';
+let run={list:[],i:0,ok:0,wrong:[]};
+
+// ---------- NAV ----------
+function go(v){
+  document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('v-'+v).classList.remove('hidden');
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(v==='inicio') renderHome();
+  if(v==='treinar' && document.getElementById('quiz-run').classList.contains('hidden')) renderSetup();
+  if(v==='cartoes') renderCard();
+  if(v==='calc') calc();
+  window.scrollTo(0,0);
+}
+
+// ---------- HOME ----------
+function renderHome(){
+  const ids=Object.keys(S.ans);
+  const ok=ids.filter(i=>S.ans[i].ok).length;
+  document.getElementById('s-feitas').textContent=ids.length+'/'+Q.length;
+  document.getElementById('s-acerto').textContent=ids.length?Math.round(ok/ids.length*100)+'%':'–';
+  document.getElementById('s-erros').textContent=ids.length-ok;
+  document.getElementById('btn-rev-home').disabled=(ids.length-ok)===0;
+  const box=document.getElementById('topic-list'); box.innerHTML='';
+  for(const t in TOPICS){
+    const qs=Q.filter(q=>q.t===t); const done=qs.filter(q=>S.ans[q.id]); const good=done.filter(q=>S.ans[q.id].ok);
+    const pct=qs.length?good.length/qs.length*100:0;
+    const d=document.createElement('div'); d.className='topic-row';
+    d.innerHTML=`<span>${TOPICS[t]}</span><span class="mono small muted">${good.length}/${qs.length}</span><div class="bar"><i style="width:${pct}%"></i></div>`;
+    box.appendChild(d);
+  }
+}
+function resetAll(){
+  const b=event.target;
+  if(b.dataset.c!=='1'){ b.dataset.c='1'; b.textContent='Toque de novo para confirmar'; setTimeout(()=>{b.dataset.c='';b.textContent='Zerar progresso'},3000); return; }
+  S={ans:{}}; save(); renderHome(); b.dataset.c=''; b.textContent='Zerar progresso';
+}
+
+// ---------- SETUP ----------
+function poolFor(m){
+  let p=Q.filter(q=>selTopics.has(q.t));
+  if(m==='erros') p=Q.filter(q=>S.ans[q.id] && !S.ans[q.id].ok);
+  if(m==='novas') p=p.filter(q=>!S.ans[q.id]);
+  return p;
+}
+function renderSetup(){
+  const tc=document.getElementById('topic-chips'); tc.innerHTML='';
+  const all=document.createElement('button'); all.className='chip'+(selTopics.size===Object.keys(TOPICS).length?' on':''); all.textContent='Todos';
+  all.onclick=()=>{ selTopics = selTopics.size===Object.keys(TOPICS).length? new Set(): new Set(Object.keys(TOPICS)); renderSetup(); };
+  tc.appendChild(all);
+  for(const t in TOPICS){
+    const b=document.createElement('button'); b.className='chip'+(selTopics.has(t)?' on':''); b.textContent=TOPICS[t];
+    b.onclick=()=>{ selTopics.has(t)?selTopics.delete(t):selTopics.add(t); renderSetup(); };
+    tc.appendChild(b);
+  }
+  const mc=document.getElementById('mode-chips'); mc.innerHTML='';
+  [['aleatorio','Aleatório'],['ordem','Em ordem'],['novas','Só não feitas'],['erros','Só os que errei']].forEach(([k,l])=>{
+    const b=document.createElement('button'); b.className='chip'+(mode===k?' on':''); b.textContent=l;
+    b.onclick=()=>{mode=k; renderSetup();}; mc.appendChild(b);
+  });
+  document.getElementById('pool-n').textContent=poolFor(mode).length;
+}
+
+// ---------- QUIZ ----------
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function startQuiz(m){
+  let list;
+  if(m==='rodada') list=run.wrong.slice();
+  else if(m==='erros') list=poolFor('erros');
+  else list=poolFor(mode);
+  if(!list.length){ go('treinar'); return; }
+  if(m!=='rodada' && (m==='erros' || mode!=='ordem')) shuffle(list);
+  run={list,i:0,ok:0,wrong:[]};
+  go('treinar');
+  document.getElementById('quiz-setup').classList.add('hidden');
+  document.getElementById('quiz-end').classList.add('hidden');
+  document.getElementById('quiz-run').classList.remove('hidden');
+  renderQ();
+}
+function endQuiz(){
+  document.getElementById('quiz-run').classList.add('hidden');
+  document.getElementById('quiz-end').classList.add('hidden');
+  document.getElementById('quiz-setup').classList.remove('hidden');
+  renderSetup();
+}
+function fmt(n){ return String(+n.toFixed(3)).replace('.',','); }
+function renderQ(){
+  const q=run.list[run.i];
+  document.getElementById('qprog').style.width=(run.i/run.list.length*100)+'%';
+  document.getElementById('btn-next').classList.add('hidden');
+  const c=document.getElementById('qcard');
+  let h=`<div class="qmeta"><span class="tag">${TOPICS[q.t]}</span><span>${run.i+1} de ${run.list.length}</span></div><div class="qtext">${q.q}</div>`;
+  if(q.o){
+    const order=q.o.map((_,i)=>i); if(q.o!==VF && q.o.length>2) shuffle(order);
+    order.forEach(i=>{ h+=`<button class="opt" data-i="${i}" onclick="answerMC(${i})">${q.o[i]}</button>`; });
+  } else {
+    h+=`<div class="numwrap"><input id="num" inputmode="decimal" placeholder="Sua resposta" onkeydown="if(event.key==='Enter')answerNum()"><span class="unit">${q.u||''}</span></div>
+        <button class="btn block" style="margin-top:10px" id="btn-check" onclick="answerNum()">Conferir</button>`;
+  }
+  h+=`<div id="fb"></div>`;
+  c.innerHTML=h;
+}
+function record(q,ok){
+  const a=S.ans[q.id]||{n:0}; a.n++; a.ok=ok; S.ans[q.id]=a; save();
+  if(ok) run.ok++; else run.wrong.push(q);
+}
+function showFb(ok,q,extra){
+  document.getElementById('fb').innerHTML=`<div class="fb ${ok?'ok':'bad'}"><b>${ok?'Isso!':'Ainda não.'}</b>${extra?extra+'<br>':''}${q.x}</div>`;
+  const nb=document.getElementById('btn-next'); nb.classList.remove('hidden');
+  nb.textContent = run.i===run.list.length-1 ? 'Ver resultado' : 'Próxima →';
+}
+function answerMC(i){
+  const q=run.list[run.i]; const ok=i===q.a;
+  document.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; const k=+b.dataset.i; if(k===q.a) b.classList.add('ok'); else if(k===i) b.classList.add('bad'); });
+  record(q,ok); showFb(ok,q);
+}
+function parseNum(s){ s=String(s).trim().replace(/−/g,'-').replace(/\s/g,'').replace(',','.').replace(/[^0-9.\-+]/g,''); return s===''||s==='-'?NaN:parseFloat(s); }
+function answerNum(){
+  const q=run.list[run.i]; const inp=document.getElementById('num'); const v=parseNum(inp.value);
+  if(isNaN(v)){ inp.focus(); inp.style.borderColor='var(--orange)'; return; }
+  const tol=Math.max(0.011,Math.abs(q.n)*0.005);
+  const ok=Math.abs(v-q.n)<=tol;
+  inp.disabled=true; inp.style.borderColor=ok?'var(--green)':'var(--red)';
+  document.getElementById('btn-check').classList.add('hidden');
+  record(q,ok);
+  showFb(ok,q, ok?'':`Resposta: <span class="mono">${fmt(q.n)} ${q.u||''}</span>`);
+}
+function nextQ(){
+  run.i++;
+  if(run.i>=run.list.length){
+    document.getElementById('quiz-run').classList.add('hidden');
+    document.getElementById('quiz-end').classList.remove('hidden');
+    const p=Math.round(run.ok/run.list.length*100);
+    document.getElementById('end-score').textContent=run.ok+'/'+run.list.length;
+    document.getElementById('end-msg').textContent = p>=90?'Forte domínio deste bloco.':p>=75?'Boa fixação. Revise os erros.':p>=60?'Base em construção.':'Muito conteúdo para revisar — volte às fórmulas e refaça.';
+    document.getElementById('btn-redo-err').classList.toggle('hidden',run.wrong.length===0);
+    return;
+  }
+  renderQ(); window.scrollTo(0,0);
+}
+
+// ---------- CARDS ----------
+let deck='Fundamentos', cards=DECKS[deck].slice(), ci=0;
+function renderDeckChips(){
+  const dc=document.getElementById('deck-chips'); dc.innerHTML='';
+  Object.keys(DECKS).forEach(d=>{ const b=document.createElement('button'); b.className='chip'+(d===deck?' on':''); b.textContent=d;
+    b.onclick=()=>{deck=d;cards=DECKS[d].slice();ci=0;renderCard();}; dc.appendChild(b); });
+}
+function renderCard(){
+  renderDeckChips();
+  const [t,d,k]=cards[ci];
+  document.getElementById('flash').classList.remove('flip');
+  document.getElementById('fc-term').textContent=t;
+  document.getElementById('fc-def').textContent=d;
+  document.getElementById('fc-key').textContent='💡 '+k;
+  document.getElementById('fc-pos').textContent=(ci+1)+' de '+cards.length;
+  document.getElementById('fc-deck').textContent=deck;
+}
+function flip(){ document.getElementById('flash').classList.toggle('flip'); }
+function moveCard(d){ ci=(ci+d+cards.length)%cards.length; renderCard(); }
+function shuffleDeck(){ shuffle(cards); ci=0; renderCard(); }
+
+// ---------- CALC ----------
+function f2(n){ return (Math.abs(n)<1e-9?0:+n.toFixed(3)).toString().replace('.',','); }
+function calc(){
+  const L=parseNum(document.getElementById('c-lrv').value), U=parseNum(document.getElementById('c-urv').value);
+  const un=document.getElementById('c-un').value.trim(); const m=document.getElementById('c-mode').value;
+  const x=parseNum(document.getElementById('c-in').value);
+  document.getElementById('c-in-lbl').textContent = m==='v'?'Valor ('+(un||'unid.')+')':m==='p'?'Percentual (%)':'Sinal (mA)';
+  document.getElementById('g-l').textContent=isNaN(L)?'':f2(L)+' '+un; document.getElementById('g-u').textContent=isNaN(U)?'':f2(U)+' '+un;
+  const w=document.getElementById('o-warn'); w.classList.add('hidden');
+  const st=document.getElementById('o-steps');
+  if([L,U,x].some(isNaN) || U===L){ ['o-v','o-p','o-m'].forEach(i=>document.getElementById(i).textContent='–'); st.textContent=U===L?'URV deve ser diferente de LRV.':'Preencha LRV, URV e o valor.'; return; }
+  const span=U-L; let p,v,ma,steps=`SPAN = ${f2(U)} − (${f2(L)}) = ${f2(span)} ${un}\n`;
+  if(m==='v'){ v=x; p=(v-L)/span*100; ma=4+16*p/100;
+    steps+=`% = (${f2(v)} − (${f2(L)})) / ${f2(span)} × 100 = ${f2(p)}%\nmA = 4 + 16 × ${f2(p/100)} = ${f2(ma)} mA`; }
+  else if(m==='p'){ p=x; v=L+span*p/100; ma=4+16*p/100;
+    steps+=`VALOR = ${f2(L)} + ${f2(span)} × ${f2(p/100)} = ${f2(v)} ${un}\nmA = 4 + 16 × ${f2(p/100)} = ${f2(ma)} mA`; }
+  else { ma=x; p=(ma-4)/16*100; v=L+span*p/100;
+    steps+=`% = (${f2(ma)} − 4) / 16 × 100 = ${f2(p)}%\nVALOR = ${f2(L)} + ${f2(span)} × ${f2(p/100)} = ${f2(v)} ${un}`; }
+  document.getElementById('o-v').textContent=f2(v); document.getElementById('o-p').textContent=f2(p)+'%'; document.getElementById('o-m').textContent=f2(ma);
+  st.textContent=steps;
+  document.getElementById('o-pin').style.left=Math.max(0,Math.min(100,p))+'%';
+  if(ma<4-1e-9||ma>20+1e-9){ w.textContent='Fora da faixa nominal 4-20 mA. Na prática, isso pode indicar under/overrange, diagnóstico ou falha — consulte a documentação do equipamento antes de interpretar.'; w.classList.remove('hidden'); }
+}
+['c-lrv','c-urv','c-un','c-in'].forEach(i=>document.getElementById(i).addEventListener('input',calc));
+document.getElementById('c-mode').addEventListener('change',()=>{
+  const m=document.getElementById('c-mode').value; const inp=document.getElementById('c-in');
+  inp.value = m==='m'?'12':m==='p'?'50':''; calc();
+});
+
+renderHome(); renderPdfs();
+if('serviceWorker' in navigator && location.protocol==='https:' && !location.hostname.endsWith('claude.ai')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+<script>
+// ================= CALCULADORAS DE INSTRUMENTAÇÃO =================
+(function(){
+const $=id=>document.getElementById(id);
+const N=id=>parseNum($(id).value);
+const V=id=>$(id).value;
+const G=9.80665, PATM=101325;
+const PU={'Pa':1,'kPa':1e3,'MPa':1e6,'bar':1e5,'mbar':100,'kgf/cm²':98066.5,'psi':6894.757,'mmH2O':9.80665,'mH2O':9806.65,'inH2O':249.08891,'mmHg':133.3224,'atm':101325};
+const FU={'t/h':['m',1000/3600],'kg/h':['m',1/3600],'kg/s':['m',1],'lb/h':['m',0.45359237/3600],'m³/h':['v',1/3600],'L/min':['v',1/60000],'L/s':['v',1e-3],'gpm (US)':['v',3.785411784e-3/60]};
+function fill(id,obj,def){ const s=$(id); s.innerHTML=Object.keys(obj).map(k=>`<option${k===def?' selected':''}>${k}</option>`).join(''); }
+function F(x,d){ if(!isFinite(x)) return '–'; const a=Math.abs(x); if(d===undefined) d=a>=10000?0:a>=1000?1:a>=100?2:a>=1?3:a>=0.01?4:6;
+  return x.toLocaleString('pt-BR',{maximumFractionDigits:d,minimumFractionDigits:0}); }
+function stat(v,l){ return `<div class="stat"><b>${v}</b><span>${l}</span></div>`; }
+function table(head,rows){ return `<table class="tb"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
+function toKgS(q,u,rho){ const [t,f]=FU[u]; return t==='m'?q*f:q*f*rho; }
+function fromKgS(m,u,rho){ const [t,f]=FU[u]; return t==='m'?m/f:m/rho/f; }
+
+// ---------- navegação dos painéis ----------
+function showPanel(k){ document.querySelectorAll('.cpanel').forEach(p=>p.classList.toggle('hidden',p.id!=='p-'+k)); RUN[k]&&RUN[k](); try{localStorage.setItem('instr-calc',k);}catch(e){} }
+$('calc-sel').addEventListener('change',()=>showPanel(V('calc-sel')));
+
+// ---------- ISO 5167-2 ----------
+function isoC(beta,Re,Dmm,tap){
+  let L1,L2; if(tap==='flange'){L1=L2=25.4/Dmm;} else if(tap==='canto'){L1=L2=0;} else {L1=1;L2=0.47;}
+  const b4=beta**4, A=Math.pow(19000*beta/Re,0.8), M2=2*L2/(1-beta);
+  let C=0.5961+0.0261*beta*beta-0.216*beta**8+0.000521*Math.pow(1e6*beta/Re,0.7)
+    +(0.0188+0.0063*A)*Math.pow(beta,3.5)*Math.pow(1e6/Re,0.3)
+    +(0.043+0.080*Math.exp(-10*L1)-0.123*Math.exp(-7*L1))*(1-0.11*A)*b4/(1-b4)
+    -0.031*(M2-0.8*Math.pow(M2,1.1))*Math.pow(beta,1.3);
+  if(Dmm<71.12) C+=0.011*(0.75-beta)*(2.8-Dmm/25.4);
+  return C;
+}
+function isoEps(beta,dp,p1,k){ const r=1-dp/p1; if(r<=0) return NaN; return 1-(0.351+0.256*beta**4+0.93*beta**8)*(1-Math.pow(r,1/k)); }
+function orQ(dp,o){ // vazão mássica kg/s a partir do ΔP
+  const beta=o.d/o.D, E=1/Math.sqrt(1-beta**4), Ad=Math.PI/4*o.d*o.d, eps=o.gas?isoEps(beta,dp,o.p1,o.k):1;
+  let C=0.6,q=0,Re=0; for(let i=0;i<60;i++){ q=C*E*eps*Ad*Math.sqrt(2*dp*o.rho); Re=4*q/(Math.PI*o.mu*o.D); const Cn=isoC(beta,Re,o.D*1000,o.tap); if(Math.abs(Cn-C)<1e-10){C=Cn;break;} C=Cn; }
+  q=C*E*eps*Ad*Math.sqrt(2*dp*o.rho); return {q,C,E,eps,Re,beta};
+}
+function orDP(q,o){ // ΔP (Pa) a partir da vazão mássica
+  const beta=o.d/o.D, E=1/Math.sqrt(1-beta**4), Ad=Math.PI/4*o.d*o.d, Re=4*q/(Math.PI*o.mu*o.D), C=isoC(beta,Re,o.D*1000,o.tap);
+  let eps=1,dp=0; for(let i=0;i<80;i++){ dp=Math.pow(q/(C*E*eps*Ad),2)/(2*o.rho); if(!o.gas) break; const en=isoEps(beta,dp,o.p1,o.k); if(!isFinite(en)) return {dp:NaN}; if(Math.abs(en-eps)<1e-12){eps=en;break;} eps=en; }
+  dp=Math.pow(q/(C*E*eps*Ad),2)/(2*o.rho); return {dp,C,E,eps,Re,beta};
+}
+function orSize(q,dp,o){ // dimensiona d (bisseção em β)
+  let lo=0.05,hi=0.85; const f=b=>orQ(dp,Object.assign({},o,{d:b*o.D})).q-q;
+  if(f(lo)>0||f(hi)<0) return null;
+  for(let i=0;i<80;i++){ const m=(lo+hi)/2; f(m)>0?hi=m:lo=m; }
+  return (lo+hi)/2;
+}
+function runOrif(){
+  const mode=V('or-mode'), gas=V('or-fl')==='g';
+  $('or-d-wrap').classList.toggle('hidden',mode==='d');
+  $('or-q-wrap').classList.toggle('hidden',mode==='q');
+  $('or-dp-wrap').classList.toggle('hidden',mode==='dp');
+  document.querySelectorAll('#p-orif .g-only').forEach(e=>e.classList.toggle('hidden',!gas));
+  const lam=parseFloat(V('or-mat')), T=N('or-T');
+  $('or-T-wrap').classList.toggle('hidden',lam===0 && !gas);
+  const kT=lam? (1+lam*(T-20)) : 1;
+  const D=N('or-D')/1000*kT, d=N('or-d')/1000*kT, rho=N('or-rho'), mu=N('or-mu')/1000, k=N('or-k');
+  const p1=gas? N('or-p1')*PU[V('or-p1u')]+(V('or-p1t')==='g'?PATM:0) : 1e9;
+  const o={D,d,rho,mu,k,p1,gas,tap:V('or-tap')};
+  const out=$('or-out'), st=$('or-steps'), w=$('or-warn'); const warns=[];
+  if([D,rho,mu].some(x=>!isFinite(x)||x<=0)||(gas&&(!isFinite(p1)||!isFinite(k)))){ out.innerHTML=''; st.textContent='Preencha os dados.'; w.classList.add('hidden'); return; }
+  let r, q, dp, dd=d;
+  if(mode==='dp'){ q=toKgS(N('or-q'),V('or-qu'),rho); if(!(d>0&&d<D)){st.textContent='d deve ser menor que D.';out.innerHTML='';return;} r=orDP(q,o); dp=r.dp; }
+  else if(mode==='q'){ dp=N('or-dp')*PU[V('or-dpu')]; if(!(d>0&&d<D)){st.textContent='d deve ser menor que D.';out.innerHTML='';return;} r=orQ(dp,o); q=r.q; }
+  else { q=toKgS(N('or-q'),V('or-qu'),rho); dp=N('or-dp')*PU[V('or-dpu')]; const b=orSize(q,dp,o);
+    if(b===null){ out.innerHTML=''; st.textContent='Não há β entre 0,05 e 0,85 que atenda: ajuste o ΔP ou o diâmetro da linha.'; w.classList.add('hidden'); return; }
+    dd=b*D; o.d=dd; r=orQ(dp,o); }
+  if(!isFinite(dp)){ out.innerHTML=''; st.textContent='ΔP resultante maior que a pressão a montante: vazão impossível para este orifício.'; return; }
+  const dpU=u=>F(dp/PU[u]);
+  let html='';
+  if(mode==='dp') html=stat(dpU('mmH2O'),'ΔP mmH2O')+stat(dpU('kPa'),'ΔP kPa')+stat(dpU('mbar'),'ΔP mbar');
+  else if(mode==='q') html=stat(F(fromKgS(q,'t/h')),'t/h')+stat(F(fromKgS(q,'kg/h')),'kg/h')+stat(F(fromKgS(q,'m³/h',rho)),'m³/h (operação)');
+  else html=stat(F(dd*1000/kT,2),'d a 20 °C (mm)')+stat(F(r.beta,4),'β = d/D')+stat(F(dd*1000,2),'d na operação (mm)');
+  out.innerHTML=html;
+  let s=`β = d/D = ${F(dd*1000,2)}/${F(D*1000,2)} = ${F(r.beta,4)}\nE = 1/√(1−β⁴) = ${F(r.E,4)}\nReD = 4·qm/(π·μ·D) = ${F(r.Re,0)}\nC (Reader-Harris/Gallagher) = ${F(r.C,4)}\nε (expansibilidade) = ${F(r.eps,4)}\nqm = C·E·ε·(π/4)·d²·√(2·ΔP·ρ)\n\n`;
+  s+=`Vazão: ${F(fromKgS(q,'t/h'))} t/h · ${F(fromKgS(q,'kg/h'))} kg/h · ${F(fromKgS(q,'m³/h',rho))} m³/h\n`;
+  s+=`ΔP: ${dpU('mmH2O')} mmH2O · ${dpU('kPa')} kPa · ${dpU('mbar')} mbar · ${dpU('kgf/cm²')} kgf/cm² · ${dpU('inH2O')} inH2O`;
+  if(kT!==1) s+=`\n\nCorreção térmica: D e d × ${F(kT,6)} (λ = ${F(lam*1e6,1)}×10⁻⁶/°C, ${F(T,1)} °C)`;
+  if(gas) s+=`\np1 = ${F(p1/1e5,4)} bar abs · p2/p1 = ${F(1-dp/p1,4)}`;
+  st.textContent=s;
+  if(r.beta<0.1||r.beta>0.75) warns.push('β fora da faixa da ISO 5167-2 (0,10 a 0,75).');
+  if(D*1000<50||D*1000>1000) warns.push('D fora da faixa da norma (50 a 1000 mm).');
+  if(dd*1000<12.5) warns.push('d menor que 12,5 mm: fora da norma.');
+  if(gas && (1-dp/p1)<0.75) warns.push('p2/p1 < 0,75: fora do limite da norma para a fórmula de ε.');
+  const Remin = r.beta<=0.56?5000:16000*r.beta*r.beta; if(r.Re<Remin) warns.push(`Reynolds abaixo do mínimo da norma (≈ ${F(Remin,0)}).`);
+  w.innerHTML=warns.join('<br>'); w.classList.toggle('hidden',!warns.length);
+}
+fill('or-p1u',PU,'kgf/cm²'); fill('or-qu',FU,'t/h'); fill('or-dpu',PU,'mmH2O');
+$('or-estrho').addEventListener('click',()=>{
+  const p1=N('or-p1')*PU[V('or-p1u')]+(V('or-p1t')==='g'?PATM:0), T=N('or-T')+273.15, M=N('or-M')/1000, Z=N('or-Z');
+  const rho=p1*M/(Z*8.314462618*T); if(isFinite(rho)){ $('or-rho').value=F(rho,4); runOrif(); }
+});
+
+// ---------- Vazão por ΔP ----------
+function runRaiz(){
+  const dpmax=N('rz-dpmax'), qmax=N('rz-qmax'), u=V('rz-dpu'), qu=V('rz-qu'), sq=V('rz-out')==='sqrt', inp=V('rz-in'), x=N('rz-x');
+  $('rz-lbl').textContent = inp==='ma'?'Sinal (mA)':inp==='dp'?'ΔP ('+u+')':'Vazão ('+qu+')';
+  let fq; // fração de vazão 0..1
+  if(inp==='ma'){ const f=(x-4)/16; fq= sq? f : Math.sqrt(Math.max(0,f)); }
+  else if(inp==='dp') fq=Math.sqrt(Math.max(0,x/dpmax));
+  else fq=x/qmax;
+  const fdp=fq*fq, ma= sq? 4+16*fq : 4+16*fdp;
+  $('rz-res').innerHTML=stat(F(fq*qmax),'vazão '+qu)+stat(F(fdp*dpmax),'ΔP '+u)+stat(F(ma,2),'mA');
+  $('rz-steps').textContent=`Vazão = ${F(fq*100,2)}% → ΔP = (${F(fq,4)})² = ${F(fdp*100,2)}% do ΔPmáx\nSaída ${sq?'com extração de raiz: mA = 4 + 16 × %vazão':'linear em ΔP: mA = 4 + 16 × %ΔP'} = ${F(ma,2)} mA`;
+  const pts=[0,10,20,25,30,40,50,60,70,75,80,90,100];
+  $('rz-tab').innerHTML=table(['Vazão %','Vazão '+qu,'ΔP %','ΔP '+u,'mA linear','mA c/ raiz'],
+    pts.map(p=>{const f=p/100;return [p+'%',F(f*qmax),F(f*f*100,2)+'%',F(f*f*dpmax),F(4+16*f*f,2),F(4+16*f,2)];}));
+  const rp=N('rz-rp'), rr=N('rz-rr'), qi=N('rz-qi'), mass=V('rz-qt')==='m';
+  const fac= mass? Math.sqrt(rr/rp) : Math.sqrt(rp/rr);
+  $('rz-corr').textContent = `${mass?'Mássica: Q_real = Q_ind × √(ρ_real/ρ_proj)':'Volumétrica: Q_real = Q_ind × √(ρ_proj/ρ_real)'}\nFator = ${F(fac,5)}\nQ_real = ${F(qi)} × ${F(fac,5)} = ${F(qi*fac)} (erro de ${F((fac-1)*100,2)}% sem correção)`;
+}
+fill('rz-dpu',PU,'mmH2O');
+
+// ---------- Nível ----------
+function runNivel(){
+  const t=V('nv-tipo'), sgp=N('nv-rp')/1000, sgs=N('nv-rs')/1000, lmin=N('nv-lmin'), lmax=N('nv-lmax'), h0=N('nv-h0'), ht=N('nv-ht'), L=N('nv-l'), u=V('nv-u');
+  $('nv-htw').classList.toggle('hidden',t==='aberto'); $('nv-rsw').classList.toggle('hidden',t==='aberto');
+  $('nv-h0w').classList.toggle('hidden',t==='selos');
+  $('nv-rsl').textContent = t==='umida'?'ρ do líquido da perna úmida (kg/m³)':'ρ do fluido de selagem do capilar (kg/m³)';
+  const dpmm = l => t==='aberto' ? sgp*(h0+l) : t==='umida' ? sgp*(h0+l) - sgs*(h0+ht) : sgp*l - sgs*ht;
+  const cv = mm => mm*G/PU[u];
+  const lrv=cv(dpmm(lmin)), urv=cv(dpmm(lmax)), span=urv-lrv;
+  let html=stat(F(lrv),'LRV '+u)+stat(F(urv),'URV '+u)+stat(F(span),'span '+u);
+  $('nv-res').innerHTML=html;
+  let s='';
+  if(t==='aberto') s=`ΔP = ρp·g·(h0 + L)\nLRV: ${F(sgp,4)} × (${F(h0)} + ${F(lmin)}) = ${F(dpmm(lmin))} mmH2O\nURV: ${F(sgp,4)} × (${F(h0)} + ${F(lmax)}) = ${F(dpmm(lmax))} mmH2O`;
+  else if(t==='umida') s=`ΔP = ρp·g·(h0 + L) − ρw·g·(h0 + Htomadas)\nLado L (perna úmida): ${F(sgs,4)} × (${F(h0)} + ${F(ht)}) = ${F(sgs*(h0+ht))} mmH2O\nLRV: ${F(dpmm(lmin))} mmH2O · URV: ${F(dpmm(lmax))} mmH2O`;
+  else s=`ΔP = ρp·g·L − ρs·g·Htomadas  (a cota do transmissor se cancela)\nCapilares: ${F(sgs,4)} × ${F(ht)} = ${F(sgs*ht)} mmH2O\nLRV: ${F(dpmm(lmin))} mmH2O · URV: ${F(dpmm(lmax))} mmH2O`;
+  if(isFinite(L)){ const dp=cv(dpmm(L)), f=(dp-lrv)/span; s+=`\n\nNível ${F(L)} mm → ΔP = ${F(dp)} ${u} → ${F(f*100,2)}% → ${F(4+16*f,2)} mA`; }
+  $('nv-steps').textContent=s;
+  $('nv-note').innerHTML = (lrv<0?'<b>LRV negativo</b>: o zero do transmissor fica abaixo de 0 (típico de perna úmida e selos).':lrv>0?'<b>LRV positivo</b>: o zero fica acima de 0 (típico de transmissor abaixo da tomada).':'LRV = 0.')
+    +'<br>A nomenclatura varia: pela ISA, LRV &gt; 0 é "zero suprimido" e LRV &lt; 0 é "zero elevado". Alguns materiais usam o inverso: confira a convenção da sua empresa.';
+}
+fill('nv-u',PU,'mmH2O');
+
+// ---------- Pressão ----------
+function runPres(){
+  const v=N('pr-v'), u=V('pr-u'), pa=v*PU[u];
+  $('pr-tab').innerHTML=table(['Unidade','Valor'],Object.keys(PU).map(k=>[k,`<span class="mono">${F(pa/PU[k])}</span>`]));
+  const a=N('pa-v')*PU[V('pa-u')], atm=N('pa-atm')*1e5, ua=V('pa-u');
+  const abs = V('pa-t')==='g'? a+atm : a, man = abs-atm;
+  $('pa-out').textContent=`Absoluta: ${F(abs/PU[ua])} ${ua}(a)  ·  ${F(abs/1e5)} bar(a)\nManométrica: ${F(man/PU[ua])} ${ua}(g)  ·  ${F(man/1e5)} bar(g)${man<0?'\n(negativo = vácuo em relação à atmosfera)':''}`;
+  const ph=N('ph-r')*G*N('ph-h'), uh=V('ph-u');
+  $('ph-out').textContent=`P = ρ·g·h = ${F(N('ph-r'))} × 9,80665 × ${F(N('ph-h'))} = ${F(ph)} Pa\n= ${F(ph/PU[uh])} ${uh}\nO transmissor lê ${F(ph/PU[uh])} ${uh} a mais. Compense: LRV e URV deslocados em +${F(ph/PU[uh])} ${uh}, ou faça o ajuste de zero com a linha cheia.`;
+}
+fill('pr-u',PU,'kgf/cm²'); fill('pa-u',PU,'kgf/cm²'); fill('ph-u',PU,'kPa');
+
+// ---------- Calibração ----------
+const CLP=[0,25,50,75,100];
+function buildCal(){
+  const two=V('cl-dir')==='2';
+  let h='<table class="tb"><thead><tr><th>%</th><th>Entrada</th><th>mA esperado</th><th>mA subida</th>'+(two?'<th>mA descida</th>':'')+'<th>Erro % span</th><th></th></tr></thead><tbody>';
+  CLP.forEach((p,i)=>{ h+=`<tr><td>${p}%</td><td class="mono" id="cl-in${i}"></td><td class="mono" id="cl-ex${i}"></td><td><input class="mini" id="cl-up${i}" inputmode="decimal" placeholder="—"></td>`+(two?`<td><input class="mini" id="cl-dn${i}" inputmode="decimal" placeholder="—"></td>`:'')+`<td class="mono" id="cl-er${i}"></td><td id="cl-ok${i}"></td></tr>`; });
+  $('cl-tab').innerHTML=h+'</tbody></table>';
+  $('cl-tab').querySelectorAll('input').forEach(e=>e.addEventListener('input',runCal));
+  runCal();
+}
+function runCal(){
+  const lrv=N('cl-lrv'), urv=N('cl-urv'), u=V('cl-u'), sq=V('cl-f')==='sqrt', tol=N('cl-tol'), two=V('cl-dir')==='2';
+  let maxE=0, maxH=0, errs=[], any=false;
+  CLP.forEach((p,i)=>{
+    const f=p/100, inp= sq? lrv+(urv-lrv)*f*f : lrv+(urv-lrv)*f, ex= 4+16*f;
+    $('cl-in'+i).textContent=F(inp)+' '+u+(sq?' (ΔP)':''); $('cl-ex'+i).textContent=F(ex,3);
+    const up=parseNum($('cl-up'+i).value), dn=two?parseNum(($('cl-dn'+i)||{}).value):NaN;
+    let e=NaN, txt='';
+    if(isFinite(up)){ e=(up-ex)/16*100; any=true; errs.push(e); }
+    if(isFinite(dn)){ const e2=(dn-ex)/16*100; errs.push(e2); if(!isFinite(e)||Math.abs(e2)>Math.abs(e)) e=e2; if(isFinite(up)) maxH=Math.max(maxH,Math.abs(up-dn)/16*100); any=true; }
+    $('cl-er'+i).textContent=isFinite(e)?(e>=0?'+':'')+F(e,3)+'%':'';
+    const ok=isFinite(e)?Math.abs(e)<=tol:null; if(isFinite(e)) maxE=Math.max(maxE,Math.abs(e));
+    $('cl-ok'+i).innerHTML= ok===null?'':ok?'<span style="color:var(--green)">✔</span>':'<span style="color:var(--red)">✘</span>';
+  });
+  if(!any){ $('cl-sum').textContent=`Preencha os mA medidos.\n${sq?'Na função raiz quadrada, a entrada de cada ponto é o ΔP que gera aquele % de vazão (ex.: 50% → 25% do ΔP).':'Entrada = LRV + span × %.'}`; return; }
+  const mean=errs.reduce((a,b)=>a+b,0)/errs.length, spread=Math.max(...errs)-Math.min(...errs);
+  let s=`Maior erro: ${F(maxE,3)}% do span (tolerância ±${F(tol,3)}%) → ${maxE<=tol?'CONFORME':'FORA DO CRITÉRIO'}`;
+  if(two && maxH>0) s+=`\nMaior histerese (subida − descida): ${F(maxH,3)}% do span`;
+  s+=`\nErro médio: ${mean>=0?'+':''}${F(mean,3)}% · dispersão: ${F(spread,3)}%`;
+  if(maxE>tol){
+    const e0=parseNum($('cl-up0').value), e4=parseNum($('cl-up4').value);
+    if(isFinite(e0)&&isFinite(e4)){ const d0=(e0-4)/16*100, d4=(e4-20)/16*100;
+      if(Math.abs(d0-d4)<tol) s+='\nPadrão: erro parecido em toda a faixa → indica ajuste de ZERO (deslocamento).';
+      else if(Math.abs(d0)<tol) s+='\nPadrão: zero bom e erro crescendo até 100% → indica ajuste de SPAN (ganho).';
+      else s+='\nPadrão: zero e span com erro → ajuste o zero primeiro, depois o span, e repita (eles interagem em alguns modelos).'; }
+    s+='\nApós qualquer ajuste: calibre de novo e registre o "como deixado".';
+  }
+  $('cl-sum').textContent=s;
+}
+['cl-lrv','cl-urv','cl-u','cl-f','cl-tol'].forEach(i=>$(i).addEventListener('input',runCal));
+$('cl-dir').addEventListener('change',buildCal);
+
+// ---------- Pt100 ----------
+const CA=3.9083e-3, CB=-5.775e-7, CC=-4.183e-12;
+function cvdR(T,R0){ return R0*(1+CA*T+CB*T*T+(T<0?CC*(T-100)*T**3:0)); }
+function cvdT(R,R0){ if(R>=R0) return (-CA+Math.sqrt(CA*CA-4*CB*(1-R/R0)))/(2*CB);
+  let T=(R/R0-1)/CA; for(let i=0;i<50;i++){ const f=cvdR(T,R0)-R, df=R0*(CA+2*CB*T+CC*(4*T**3-300*T*T)); T-=f/df; } return T; }
+function runTemp(){
+  const R0=+V('tp-r0'), m=V('tp-m'), x=N('tp-x'), lrv=N('tp-lrv'), urv=N('tp-urv');
+  $('tp-l').textContent= m==='t'?'Temperatura (°C)':'Resistência (Ω)';
+  const T= m==='t'? x : cvdT(x,R0), R= m==='t'? cvdR(x,R0) : x, f=(T-lrv)/(urv-lrv);
+  $('tp-res').innerHTML=stat(F(T,2),'°C')+stat(F(R,3),'Ω')+stat(F(4+16*f,3),'mA (range)');
+  $('tp-tab').innerHTML=table(['%','°C','Ω','mA'],[0,25,50,75,100].map(p=>{const t=lrv+(urv-lrv)*p/100;return [p+'%',F(t,2),F(cvdR(t,R0),3),F(4+16*p/100,2)];}));
+}
+
+// ---------- Conversões de vazão ----------
+function runVaz(){
+  const q=N('vz-q'), u=V('vz-qu'), r=N('vz-r'), m=toKgS(q,u,r);
+  $('vz-tab').innerHTML=table(['Unidade','Valor'],Object.keys(FU).map(k=>[k,`<span class="mono">${F(fromKgS(m,k,r))}</span>`]));
+  const Q=N('vv-q')/3600, D=N('vv-d')/1000, rv=N('vv-r'), mu=N('vv-mu')/1000, A=Math.PI/4*D*D, v=Q/A, Re=rv*v*D/mu;
+  $('vv-out').textContent=`Área = π/4 × D² = ${F(A,5)} m²\nv = Q/A = ${F(v,3)} m/s\nRe = ρ·v·D/μ = ${F(Re,0)} (${Re<2300?'laminar':Re<4000?'transição':'turbulento'})`;
+  const p=(N('gn-p')+N('gn-a'))*1e5, T=N('gn-t')+273.15, z=N('gn-z'), qg=N('gn-q'), fac=(101325/p)*(T/273.15)*z;
+  $('gn-out').textContent = V('gn-m')==='n'
+    ? `Q_real = Q_N × (P_N/P) × (T/T_N) × Z\n= ${F(qg)} × (1,01325/${F(p/1e5,4)}) × (${F(T,2)}/273,15) × ${F(z,3)}\n= ${F(qg*fac)} m³/h nas condições de operação`
+    : `Q_N = Q_real × (P/P_N) × (T_N/T) / Z\n= ${F(qg)} × (${F(p/1e5,4)}/1,01325) × (273,15/${F(T,2)}) / ${F(z,3)}\n= ${F(qg/fac)} Nm³/h`;
+}
+fill('vz-qu',FU,'t/h');
+
+
+// ---------- Tanque ----------
+function segArea(R,h){ h=Math.max(0,Math.min(2*R,h)); return R*R*Math.acos((R-h)/R)-(R-h)*Math.sqrt(2*R*h-h*h); }
+function runTanque(){
+  const f=V('tq-f'), r=N('tq-r'), a=N('tq-a'), b=N('tq-b'), c=N('tq-c'), hm=N('tq-hm'), h=N('tq-h');
+  $('tq-al').textContent= f==='r'?'Comprimento (m)':'Diâmetro (m)';
+  $('tq-bw').classList.toggle('hidden',f==='v'); $('tq-cw').classList.toggle('hidden',f!=='r');
+  $('tq-bl').textContent='Comprimento (m)';
+  const vol = x => f==='v'? Math.PI/4*a*a*x : f==='h'? segArea(a/2,x)*b : a*c*x;
+  const hmax = f==='h'? Math.min(hm,a) : hm;
+  const Vt=vol(hmax), Vh=vol(h);
+  $('tq-res').innerHTML=stat(F(Vh),'m³ atuais')+stat(F(Vh*r/1000),'t atuais')+stat(F(Vh/Vt*100,2)+'%','do volume útil');
+  let s= f==='v'?'V = π/4 × D² × h':f==='h'?'V = A_segmento(h) × L,  A = R²·acos((R−h)/R) − (R−h)·√(2Rh − h²)':'V = comprimento × largura × h';
+  s+=`
+Volume útil (h = ${F(hmax)} m): ${F(Vt)} m³ = ${F(Vt*1000,0)} L
+Nível ${F(h)} m → ${F(Vh)} m³ · massa = ρ·V = ${F(Vh*r)} kg`;
+  s+=`
+Nível ${F(h/hmax*100,2)}% da altura ≠ volume ${F(Vh/Vt*100,2)}%`;
+  $('tq-steps').textContent=s;
+  $('tq-tab').innerHTML=table(['Nível %','Nível m','Volume m³','Volume %','Massa t'],[0,10,20,30,40,50,60,70,80,90,100].map(p=>{const x=hmax*p/100,v=vol(x);return [p+'%',F(x),F(v),F(v/Vt*100,2)+'%',F(v*r/1000)];}));
+}
+
+// ---------- Célula de carga ----------
+function runPeso(){
+  const cap=N('lc-cap'), n=N('lc-n'), s=N('lc-s'), e=N('lc-e'), t=N('lc-t'), w=N('lc-w'), lrv=N('lc-lrv'), urv=N('lc-urv');
+  const capT=cap*n, full=s*e, tot=t+w, mv=full*tot/capT, mvT=full*t/capT, f=(w-lrv)/(urv-lrv);
+  $('lc-res').innerHTML=stat(F(mv,3),'mV no somador')+stat(F(tot/capT*100,1)+'%','da capacidade')+stat(F(4+16*f,2),'mA (range)');
+  $('lc-steps').textContent=`Capacidade total = ${F(cap)} × ${F(n,0)} = ${F(capT)} kg
+Fundo de escala = ${F(s,3)} mV/V × ${F(e,2)} V = ${F(full,3)} mV
+Tara ${F(t)} kg → ${F(mvT,3)} mV (zero do transmissor)
+Tara + produto = ${F(tot)} kg → ${F(mv,3)} mV
+Sensibilidade = ${F(full/capT*1000,4)} mV por tonelada
+Range: ${F(lrv)} a ${F(urv)} kg líquido → ${F(mvT+full*lrv/capT,3)} a ${F(mvT+full*urv/capT,3)} mV`;
+  const warns=[]; const used=(t+urv)/capT;
+  if(used>0.8) warns.push(`Tara + URV usam ${F(used*100,1)}% da capacidade. Recomenda-se ficar abaixo de ~70–80% para margem de sobrecarga, vento e impacto.`);
+  if(t/capT>0.5) warns.push('A tara ocupa mais da metade da capacidade: a resolução útil fica menor.');
+  $('lc-warn').innerHTML=warns.join('<br>'); $('lc-warn').classList.toggle('hidden',!warns.length);
+}
+
+// ---------- Massa e força ----------
+const MU={'kg':1,'g':1e-3,'t':1000,'lb':0.45359237,'oz':0.028349523,'kgf (força)':1,'N (força)':1/9.80665,'kN (força)':1000/9.80665,'lbf (força)':0.45359237};
+function runMassa(){ const v=N('ms-v'), kg=v*MU[V('ms-u')];
+  $('ms-tab').innerHTML=table(['Unidade','Valor'],Object.keys(MU).map(k=>[k,`<span class="mono">${F(kg/MU[k])}</span>`])); }
+fill('ms-u',MU,'kg');
+
+const RUN={tanque:runTanque,peso:runPeso,massa:runMassa,orif:runOrif,raiz:runRaiz,nivel:runNivel,pres:runPres,cal:buildCal,temp:runTemp,vaz:runVaz,escala:()=>calc()};
+const MAP={tanque:'tq-',peso:'lc-',massa:'ms-',orif:'or-',raiz:'rz-',nivel:'nv-',pres:['pr-','pa-','ph-'],temp:'tp-',vaz:['vz-','vv-','gn-']};
+Object.entries(MAP).forEach(([k,pre])=>{ [].concat(pre).forEach(px=>{
+  document.querySelectorAll(`#p-${k} input[id^="${px}"], #p-${k} select[id^="${px}"]`).forEach(e=>{ e.addEventListener('input',RUN[k]); e.addEventListener('change',RUN[k]); });
+});});
+buildCal();
+try{const k=localStorage.getItem('instr-calc'); if(k&&$('p-'+k)){ $('calc-sel').value=k; showPanel(k);} }catch(e){}
+window.__calcTest={orDP,orQ,orSize,isoC,cvdR,cvdT};
+})();
+</script>
+</body>
+</html>
