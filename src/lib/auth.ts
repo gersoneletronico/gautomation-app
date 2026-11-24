@@ -3,6 +3,13 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { sql, ensureSchema } from "./db";
 
+if (
+  process.env.NODE_ENV === "production" &&
+  process.env.NEXT_PHASE !== "phase-production-build" &&
+  !process.env.AUTH_SECRET
+) {
+  throw new Error("AUTH_SECRET não definido (obrigatório em produção)");
+}
 const SECRET = new TextEncoder().encode(
   process.env.AUTH_SECRET || "gautomation-dev-secret-troque-em-producao"
 );
